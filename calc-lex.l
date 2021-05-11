@@ -4,26 +4,36 @@
 #include <string.h>
 %}
 
-DIGIT    [0-9]
-NUM      {DIGIT}+(\.{DIGIT}+)?
-
-LETTER   [a-zA-Z]
-ID       {LETTER}({LETTER}|{DIGIT})*
+DIGIT [0-9]
+NUM {DIGIT}+(\.{DIGIT}+)?
+ID [a-zA-Z]+
 
 %%
 
-[ ]     { /* skip blanks */ }
+[ \t\n] { /* skip useless chars */ }
 
-[iI][fF] {return IF;}
-{NUM}    {yylval.value = atof(yytext);
-          return NUM;}
-{ID}     {yylval.lexeme = strdup(yytext);
-          return ID;}
+fun { return FUN; }
 
-"+"     {return '+';}
-"-"     {return '-';}
-"*"     {return '*';}
-"/"     {return '/';}
-\n      {return '\n';}
+"(" { return '('; }
+
+")" { return ')'; }
+
+"{" { return '{'; }
+
+"}" { return '}'; }
+
+"+" { return '+'; }
+
+";" { return ';'; }
+
+{NUM} {
+       yylval.value = atof(yytext);
+       return NUM;
+      }
+
+{ID} {
+      yylval.lexeme = strdup(yytext);
+      return ID;
+     }
 
 %%
