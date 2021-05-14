@@ -17,11 +17,23 @@ ID [a-zA-Z]+
 
 ")" { return ')'; }
 
+"{" { return '{'; }
+
+"}" { return '}'; }
+
 "+" { return '+'; }
+
+":" { return ':'; }
 
 ";" { return ';'; }
 
+"=" { return '='; }
+
 "print" { return PRINT; }
+
+"int" { return INT; }
+
+"real" { return REAL; }
 
 {INT_NUM} {
             yylval.int_value = atoi(yytext);
