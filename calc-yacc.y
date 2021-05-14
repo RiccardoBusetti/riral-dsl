@@ -124,7 +124,6 @@ SymbolTable *init_symbol_table(SymbolTable *symbol_table) {
 void insert(SymbolTable *symbol_table, char *name, Type type, TypeData data) {
       symbol_table = init_symbol_table(symbol_table);
 
-      // TODO: check if type of expression and declared type are equal.
       SymbolTableEntry *entry = malloc(sizeof(SymbolTableEntry));
       entry->name = name;
       entry->type = type;
