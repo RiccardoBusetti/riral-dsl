@@ -4,10 +4,13 @@
 #include <ctype.h>
 #include <stdio.h>
 
+/* OPERATORS */
 typedef enum {
       SUM_OP
 } Operation;
 
+
+/* TYPES */
 typedef enum {
       INT_TYPE,
       REAL_TYPE
@@ -18,15 +21,17 @@ typedef union {
       double real_value;
 } TypeData;
 
+
+/* SYMBOL TABLES */
 typedef struct {
       char* name;
       Type type;
       TypeData data;
 } SymbolTableEntry;
 
-typedef struct sm_node {
+typedef struct symbol_table_node {
       SymbolTableEntry *entry;
-      struct sm_node *next;
+      struct symbol_table_node *next;
 } SymbolTableNode;
 
 typedef struct {
@@ -34,21 +39,44 @@ typedef struct {
       SymbolTableNode *tail;
 } SymbolTable;
 
+
+/* SCOPING */
+typedef struct scope {
+      SymbolTable *symbol_table;
+      struct scope *outer;
+} Scope;
+
+typedef struct {
+      Scope *current;
+} Program;
+
+
+/* EXPRESSIONS */
 typedef struct {
       Type type;
       TypeData data;
 } ExprResult;
 
+
+/* FUNCTION PROTOTYPES */
 int yylex();
 void yyerror(const char *s);
 
 void check_types_eq(Type type1, Type type2);
 
+Program *get_program();
+
+void destroy_scope();
+void new_scope();
+
 SymbolTable *init_symbol_table();
-void insert(SymbolTable *symbol_table, char *name, Type type, TypeData data);
-SymbolTableEntry *lookup(SymbolTable *symbol_table, char *name);
-void delete(SymbolTable *symbol_table, char *name);
+SymbolTable *get_symbol_table(int scope_index);
+void insert(char *name, Type type, TypeData data);
+SymbolTableEntry *lookup(char *name);
+void delete(char *name);
 void print_symbol_table(SymbolTable *symbol_table);
+
+void initial_assignment(char *variable_name, Type variable_type, ExprResult *expr_result);
 
 ExprResult *build_expr_result(Type type, TypeData data);
 ExprResult *operation(ExprResult *left, ExprResult *right, Operation operation);
@@ -56,7 +84,7 @@ ExprResult *sum(ExprResult *left, ExprResult *right);
 
 void print_expr_result(ExprResult *expr_result);
 
-SymbolTable *SYMBOL_TABLE = NULL;
+Program *MAIN = NULL;
 %}
 
 %union {
@@ -88,7 +116,7 @@ statements : statement ';' statements
            ;
 
 statement : expr
-          | ID ':' type '=' expr { check_types_eq($3, $5->type); insert(SYMBOL_TABLE, $1, $3, $5->data); }
+          | ID ':' type '=' expr { initial_assignment($1, $3, $5); }
           | PRINT '(' expr ')' { print_expr_result($3); }
           ;
 
@@ -100,7 +128,7 @@ expr : '(' expr ')' { $$ = $2; }
      | expr '+' expr { $$ = operation($1, $3, SUM_OP); }
      | INT_NUM { TypeData data; data.int_value = $1; $$ = build_expr_result(INT_TYPE, data); }
      | REAL_NUM { TypeData data; data.real_value = $1; $$ = build_expr_result(REAL_TYPE, data); }
-     | ID { SymbolTableEntry *entry = lookup(SYMBOL_TABLE, $1); $$ = build_expr_result(entry->type, entry->data); }
+     | ID { SymbolTableEntry *entry = lookup($1); $$ = build_expr_result(entry->type, entry->data); }
      ;
 
 %%
@@ -112,17 +140,56 @@ void check_types_eq(Type type1, Type type2) {
             yyerror("incompatible types");
 }
 
-SymbolTable *init_symbol_table(SymbolTable *symbol_table) {
-      if (SYMBOL_TABLE == NULL) {
-            symbol_table = malloc(sizeof(symbol_table));
-            SYMBOL_TABLE = symbol_table;
-      }
+Program *get_program() {
+      if (MAIN == NULL) MAIN = malloc(sizeof(Program));
+      return MAIN;
+}
 
+void destroy_scope() {
+      Program *program = get_program();
+
+      if (program->current != NULL) {
+            program->current = program->current->outer;
+      }
+}
+
+void new_scope() {
+      Program *program = get_program();
+
+      Scope *scope = malloc(sizeof(Scope));
+      scope->symbol_table = init_symbol_table();
+
+      if (program->current == NULL) {
+            // We do not have any active scope, create the main scope.
+            scope->outer = NULL;
+            program->current = scope;
+      } else {
+            // We already have one scope, we need to update this scope as the current.
+            scope->outer = program->current;
+            program->current = scope;
+      }
+}
+
+SymbolTable *init_symbol_table() {
+      SymbolTable *symbol_table = malloc(sizeof(SymbolTable));
       return symbol_table;
 }
 
-void insert(SymbolTable *symbol_table, char *name, Type type, TypeData data) {
-      symbol_table = init_symbol_table(symbol_table);
+SymbolTable *get_symbol_table(int scope_index) {
+      if (MAIN == NULL) new_scope();
+
+      int index = 0;
+      Scope *current = MAIN->current;
+      while (current != NULL && index < scope_index) {
+            current = current->outer;
+            index++;
+      }
+
+      return current == NULL ? NULL : current->symbol_table;
+}
+
+void insert(char *name, Type type, TypeData data) {
+      SymbolTable *symbol_table = get_symbol_table(0);
 
       SymbolTableEntry *entry = malloc(sizeof(SymbolTableEntry));
       entry->name = name;
@@ -151,24 +218,34 @@ void insert(SymbolTable *symbol_table, char *name, Type type, TypeData data) {
       }
 }
 
-SymbolTableEntry *lookup(SymbolTable *symbol_table, char *name) {
-      symbol_table = init_symbol_table(symbol_table);
+SymbolTableEntry *lookup(char *name) {
+      int scope_index = 0;
+      SymbolTable *symbol_table = NULL;
 
-      SymbolTableNode *current = symbol_table->head;
+      do {
+            symbol_table = get_symbol_table(scope_index);
 
-      while (current != NULL) {
-            if (strcmp(current->entry->name, name) == 0) 
-                  return current->entry;
+            if (symbol_table != NULL) {
+                  SymbolTableNode *current = symbol_table->head;
 
-            current = current->next;
-      }
+                  while (current != NULL) {
+                        if (strcmp(current->entry->name, name) == 0) 
+                              return current->entry;
+
+                        current = current->next;
+                  }
+
+                  scope_index++;
+            }
+      } while (symbol_table != NULL);
 
       yyerror("the variable is not in this scope");
+
       return NULL;
 }
 
-void delete(SymbolTable *symbol_table, char *name) {
-      symbol_table = init_symbol_table(symbol_table);
+void delete(char *name) {
+      SymbolTable *symbol_table = get_symbol_table(0);
       // TODO: implement deletion, needed only in case of scoping.
 }
 
@@ -181,6 +258,10 @@ void print_symbol_table(SymbolTable *symbol_table) {
       }
 }
 
+void initial_assignment(char *variable_name, Type variable_type, ExprResult *expr_result) {
+      check_types_eq(variable_type, expr_result->type);
+      insert(variable_name, variable_type, expr_result->data);
+}
 
 ExprResult *build_expr_result(Type type, TypeData data) {
       ExprResult *expr_result = malloc(sizeof(ExprResult));
@@ -226,10 +307,10 @@ ExprResult *sum(ExprResult *left, ExprResult *right) {
 void print_expr_result(ExprResult *expr_result) {
       switch (expr_result->type) {
             case INT_TYPE:
-                  printf("Integer with value %i\n", expr_result->data.int_value);
+                  printf("int: %i\n", expr_result->data.int_value);
                   break;
             case REAL_TYPE:
-                  printf("Real with value %f\n", expr_result->data.real_value);
+                  printf("real: %f\n", expr_result->data.real_value);
                   break;
             default:
                   printf("Unknown type\n");   
@@ -242,8 +323,10 @@ void yyerror(const char *s) {
     exit(0);
 }
 
-// main() { 
-//   extern int yydebug;
-//   yydebug = 1;
-//   return yyparse();
-// }
+int main(void) {
+      printf("Waiting for input...\n");
+
+      new_scope();
+
+      return yyparse();
+} 
