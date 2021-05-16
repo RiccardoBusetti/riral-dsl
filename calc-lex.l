@@ -29,6 +29,8 @@ ID [a-zA-Z]+
 
 "=" { return '='; }
 
+"block" { return BLOCK; }
+
 "print" { return PRINT; }
 
 "int" { return INT; }

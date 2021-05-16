@@ -62,6 +62,8 @@ typedef struct {
 int yylex();
 void yyerror(const char *s);
 
+char *interpolate(char *string, ...);
+
 void check_types_eq(Type type1, Type type2);
 
 Program *get_program();
@@ -72,6 +74,7 @@ void new_scope();
 SymbolTable *init_symbol_table();
 SymbolTable *get_symbol_table(int scope_index);
 void insert(char *name, Type type, TypeData data);
+SymbolTableEntry *search(char *name);
 SymbolTableEntry *lookup(char *name);
 void delete(char *name);
 void print_symbol_table(SymbolTable *symbol_table);
@@ -98,7 +101,7 @@ Program *MAIN = NULL;
 %token <int_value> INT_NUM
 %token <real_value> REAL_NUM
 %token <lexeme> ID
-%token INT REAL PRINT
+%token INT REAL PRINT BLOCK
 
 %type <type> type
 %type <expr_result> expr
@@ -118,6 +121,7 @@ statements : statement ';' statements
 statement : expr
           | ID ':' type '=' expr { initial_assignment($1, $3, $5); }
           | PRINT '(' expr ')' { print_expr_result($3); }
+          | BLOCK '{' { new_scope(); } statements { destroy_scope(); } '}'
           ;
 
 type : INT { $$ = INT_TYPE; }
@@ -199,26 +203,25 @@ void insert(char *name, Type type, TypeData data) {
       SymbolTableNode *node = malloc(sizeof(SymbolTableNode));
       node->entry = entry;
 
+      if (search(name) != NULL) {
+            char *message;
+            sprintf(message, "variable %s is already declared in this scope", name);
+            yyerror(message);
+      }
+            
+
       if (symbol_table->head == NULL) {
             // The symbol table is empty, initialize it.
             symbol_table->head = node;
             symbol_table->tail = node;
       } else {
             // The symbol table is non empty, append the value to it. 
-            SymbolTableNode *current = symbol_table->head;
-            while (current != NULL) {
-                  if (strcmp(current->entry->name, entry->name) == 0) 
-                        yyerror("variable is already declared in this scope");
-
-                  current = current->next;
-            }
-            
             symbol_table->tail->next = node;
             symbol_table->tail = node;
       }
 }
 
-SymbolTableEntry *lookup(char *name) {
+SymbolTableEntry *search(char *name) {
       int scope_index = 0;
       SymbolTable *symbol_table = NULL;
 
@@ -239,9 +242,18 @@ SymbolTableEntry *lookup(char *name) {
             }
       } while (symbol_table != NULL);
 
-      yyerror("the variable is not in this scope");
-
       return NULL;
+}
+
+SymbolTableEntry *lookup(char *name) {
+      SymbolTableEntry *found_entry = search(name);
+      if (found_entry == NULL) {
+            char *message;
+            sprintf(message, "the variable %s is not in this scope", name);
+            yyerror(message);
+      }
+
+      return found_entry;
 }
 
 void delete(char *name) {

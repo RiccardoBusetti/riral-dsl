@@ -1,0 +1,5 @@
+pi: real = 3.14;
+block {
+    doublepi: real = pi + pi;
+    print(doublepi);
+};
