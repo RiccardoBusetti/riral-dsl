@@ -31,9 +31,13 @@ ID [a-zA-Z]+
 
 "^" { return '^'; }
 
-"ln" { return 'ln'; }
+"ln" { return LN; }
 
-"log" { return 'log'; }
+"log" { return LOG; }
+
+"log10" { return LOG10;}
+
+"sqrt" { return SQRT;}
 
 "," { return ','; }
 

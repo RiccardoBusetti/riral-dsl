@@ -10,9 +10,12 @@ typedef enum {
       SUM_OP,
       DIF_OP,
       MOL_OP,
-      DVS_OP,
+      DIV_OP,
       EXP_OP,
-      LOG_OP
+      LN_OP,
+      LOG_OP,
+      LOG10_OP,
+      SQRT_OP
 } Operation;
 
 
@@ -93,9 +96,14 @@ ExprResult *operation(ExprResult *left, ExprResult *right, Operation operation);
 ExprResult *sum(ExprResult *left, ExprResult *right);
 ExprResult *dif(ExprResult *left, ExprResult *right);
 ExprResult *mol(ExprResult *left, ExprResult *right);
-ExprResult *dvs(ExprResult *left, ExprResult *right);
+ExprResult *div_op(ExprResult *left, ExprResult *right);
 ExprResult *exp_op(ExprResult *left, ExprResult *right);
 ExprResult *log_op(ExprResult *left, ExprResult *right);
+
+ExprResult *single_operation(ExprResult *left, Operation operation);
+ExprResult *ln_op(ExprResult *left);
+ExprResult *log10_op(ExprResult *left);
+ExprResult *sqrt_op(ExprResult *left);
 
 void print_expr_result(ExprResult *expr_result);
 
@@ -113,15 +121,16 @@ Program *MAIN = NULL;
 %token <int_value> INT_NUM
 %token <real_value> REAL_NUM
 %token <lexeme> ID
-%token INT REAL PRINT BLOCK
+%token INT REAL PRINT BLOCK 
+%token LN LOG LOG10 SQRT
 
 %type <type> type
 %type <expr_result> expr
 
-%left '+' '-'
+%left '-' '+'
 %left '*' '/'
 %left '^' 
-%left 'log'
+%left LOG LN LOG10 SQRT
 
 %start scope
 
@@ -147,9 +156,12 @@ expr : '(' expr ')' { $$ = $2; }
      | expr '+' expr { $$ = operation($1, $3, SUM_OP); }
      | expr '-' expr { $$ = operation($1, $3, DIF_OP); }
      | expr '*' expr { $$ = operation($1, $3, MOL_OP); }
-     | expr '/' expr { $$ = operation($1, $3, DVS_OP); }
+     | expr '/' expr { $$ = operation($1, $3, DIV_OP); }
      | expr '^' expr { $$ = operation($1, $3, EXP_OP); }
-     | 'log' '(' expr ',' expr ')' { $$ = operation($3, $5, LOG_OP); }
+     | LOG '(' expr ',' expr ')' { $$ = operation($3, $5, LOG_OP); }
+     | LN '(' expr ')' { $$ = single_operation($3,  LN_OP); }
+     | LOG10 '(' expr ')' { $$ = single_operation($3, LOG10_OP); }
+     | SQRT '(' expr ')' { $$ = single_operation($3,  SQRT_OP); }
      | INT_NUM { TypeData data; data.int_value = $1; $$ = build_expr_result(INT_TYPE, data); }
      | REAL_NUM { TypeData data; data.real_value = $1; $$ = build_expr_result(REAL_TYPE, data); }
      | ID { SymbolTableEntry *entry = lookup($1); $$ = build_expr_result(entry->type, entry->data); }
@@ -313,12 +325,27 @@ ExprResult *operation(ExprResult *left, ExprResult *right, Operation operation) 
                   return dif(left, right);
             case MOL_OP: 
                   return mol(left, right);
-            case DVS_OP: 
-                  return dvs(left, right);
+            case DIV_OP: 
+                  return div_op(left, right);
             case EXP_OP: 
                   return exp_op(left, right);
             case LOG_OP: 
                   return exp_op(left, right);
+            default:
+                  return left;
+      }
+}
+
+ExprResult *single_operation(ExprResult *left, Operation operation) {
+      ExprResult *new_result;
+
+      switch (operation) {
+            case LN_OP: 
+                  return ln_op(left);
+            case LOG10_OP: 
+                  return log10_op(left);
+            case SQRT_OP: 
+                  return sqrt_op(left);
             default:
                   return left;
       }
@@ -392,26 +419,26 @@ ExprResult *mol(ExprResult *left, ExprResult *right) {
       return mol;
 }
 
-ExprResult *dvs(ExprResult *left, ExprResult *right) {
-      ExprResult *dvs = malloc(sizeof(ExprResult));
+ExprResult *div_op(ExprResult *left, ExprResult *right) {
+      ExprResult *div_op = malloc(sizeof(ExprResult));
 
       if (left->type == INT_TYPE && right->type == INT_TYPE) {
-            dvs->type = INT_TYPE;
-            dvs->data.int_value = left->data.int_value / right->data.int_value;
+            div_op->type = INT_TYPE;
+            div_op->data.int_value = left->data.int_value / right->data.int_value;
       } else if (left->type == INT_TYPE && right->type == REAL_TYPE) {
-            dvs->type = REAL_TYPE;
-            dvs->data.real_value = left->data.int_value / right->data.real_value;
+            div_op->type = REAL_TYPE;
+            div_op->data.real_value = left->data.int_value / right->data.real_value;
       } else if (left->type == REAL_TYPE && right->type == INT_TYPE) {
-            dvs->type = REAL_TYPE;
-            dvs->data.real_value = left->data.real_value / right->data.int_value;
+            div_op->type = REAL_TYPE;
+            div_op->data.real_value = left->data.real_value / right->data.int_value;
       } else if (left->type == REAL_TYPE && right->type == REAL_TYPE) {
-            dvs->type = REAL_TYPE;
-            dvs->data.real_value = left->data.real_value / right->data.real_value;
+            div_op->type = REAL_TYPE;
+            div_op->data.real_value = left->data.real_value / right->data.real_value;
       } else {
             yyerror("invalid type/s for expression /");
       }
 
-      return dvs;
+      return div_op;
 }
 
 ExprResult *exp_op(ExprResult *left, ExprResult *right) {
@@ -456,6 +483,54 @@ ExprResult *log_op(ExprResult *left, ExprResult *right) {
       }
 
       return log_op;
+}
+
+ExprResult *ln_op(ExprResult *left) {
+      ExprResult *ln_op = malloc(sizeof(ExprResult));
+
+      if (left->type == INT_TYPE) {
+            ln_op->type = REAL_TYPE;
+            ln_op->data.real_value = log (left->data.int_value);
+      } else if (left->type == INT_TYPE) {
+            ln_op->type = REAL_TYPE;
+            ln_op->data.real_value = log (left->data.int_value);
+      } else {
+            yyerror("invalid type/s for expression ln");
+      }
+
+      return ln_op;
+}
+
+ExprResult *log10_op(ExprResult *left) {
+      ExprResult *log10_op = malloc(sizeof(ExprResult));
+
+      if (left->type == INT_TYPE) {
+            log10_op->type = REAL_TYPE;
+            log10_op->data.real_value= log10 (left->data.int_value);
+      } else if (left->type == INT_TYPE) {
+            log10_op->type = REAL_TYPE;
+            log10_op->data.real_value = log10 (left->data.int_value);
+      } else {
+            yyerror("invalid type/s for expression log10");
+      }
+
+      return log10_op;
+}
+
+ExprResult *sqrt_op(ExprResult *left) {
+      ExprResult *sqrt_op = malloc(sizeof(ExprResult));
+
+      if (left->type == INT_TYPE) {
+            sqrt_op->type = REAL_TYPE;
+            sqrt_op->data.real_value= sqrt (left->data.int_value);
+      } else if (left->type == INT_TYPE) {
+            sqrt_op->type = REAL_TYPE;
+            sqrt_op->data.real_value = sqrt (left->data.int_value);
+      } else {
+            yyerror("invalid type/s for expression sqrt");
+      }
+
+      return sqrt_op;
 }
 
 void print_expr_result(ExprResult *expr_result) {
