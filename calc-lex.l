@@ -23,6 +23,20 @@ ID [a-zA-Z]+
 
 "+" { return '+'; }
 
+"-" { return '-'; }
+
+"*" { return '*'; }
+
+"/" { return '/'; }
+
+"^" { return '^'; }
+
+"ln" { return 'ln'; }
+
+"log" { return 'log'; }
+
+"," { return ','; }
+
 ":" { return ':'; }
 
 ";" { return ';'; }
