@@ -53,16 +53,18 @@ STRING_CONTENT \"[a-zA-Z0-9.]+\"
             yylval.real_value = atof(yytext);
             return REAL_NUM;
            }
+     
+{STRING_CONTENT} { 
+                  char *string = yytext;
+                  string++[strlen(yytext) - 1] = 0;
+		              yylval.string_value = strdup(string);
+		              return STRING_CONTENT;
+		             }
 
 {ID} {
       yylval.lexeme = strdup(yytext);
       return ID;
      }
-     
-{STRING_CONTENT} { 
-		yylval.string_value = strdup(yytext);
-		return STRING_CONTENT;
-		}
 
 . { printf("The symbol %s is unknown.\n", yytext); exit(0); }
 
