@@ -72,6 +72,7 @@ typedef struct {
 /* FUNCTION PROTOTYPES */
 int yylex();
 void yyerror(const char *s);
+void parse(FILE *fileInput);
 
 char *interpolate(char *string, ...);
 
@@ -396,8 +397,9 @@ void yyerror(const char *s) {
     exit(0);
 }
 
-void parse(FILE* fileInput) {
+void parse(FILE *fileInput) {
       yyin = fileInput;
+
       while(feof(yyin) == 0) {
             yyparse();
       }
@@ -406,11 +408,8 @@ void parse(FILE* fileInput) {
 int main(int argc, char* argv[]) {
 	FILE *fp = fopen(OUTPUT_FILE, "w");
 	fclose (fp);
-      
-	FILE* fileInput;
-	char inputBuffer[36];
-	char lineData[36];
 
+	FILE* fileInput;
 	if((fileInput = fopen(argv[1], "r")) == NULL) {
 	      printf("Error while reading the file, try again.\n");
 	      exit(0);
