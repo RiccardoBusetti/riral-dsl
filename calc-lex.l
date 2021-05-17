@@ -29,13 +29,15 @@ ID [a-zA-Z]+
 
 "=" { return '='; }
 
-"block" { return BLOCK; }
-
-"print" { return PRINT; }
-
 "int" { return INT; }
 
 "real" { return REAL; }
+
+"print" { return PRINT; }
+
+"block" { return BLOCK; }
+
+"return" { return RETURN; }
 
 {INT_NUM} {
             yylval.int_value = atoi(yytext);

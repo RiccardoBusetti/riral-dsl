@@ -14,6 +14,7 @@ typedef enum {
 
 /* TYPES */
 typedef enum {
+      VOID_TYPE,
       INT_TYPE,
       REAL_TYPE
 } Type;
@@ -53,6 +54,13 @@ typedef struct {
 } Program;
 
 
+/* STATEMENTS */
+typedef struct {
+      Type type;
+      TypeData data;
+} StatementResult;
+
+
 /* EXPRESSIONS */
 typedef struct {
       Type type;
@@ -81,7 +89,11 @@ SymbolTableEntry *lookup(char *name);
 void delete(char *name);
 void print_symbol_table(SymbolTable *symbol_table);
 
-void initial_assignment(char *variable_name, Type variable_type, ExprResult *expr_result);
+void initial_assignment(char *variable_name, Type variable_type, StatementResult *statement_result);
+
+StatementResult *build_statement_result(Type type, TypeData data);
+StatementResult *build_statement_result_from(ExprResult *expr_result);
+StatementResult *build_void_statement_result();
 
 ExprResult *build_expr_result(Type type, TypeData data);
 ExprResult *operation(ExprResult *left, ExprResult *right, Operation operation);
@@ -97,15 +109,18 @@ Program *MAIN = NULL;
         double real_value;
         char *lexeme;
         Type type;
+        StatementResult *statement_result;
         ExprResult *expr_result;
        }
 
 %token <int_value> INT_NUM
 %token <real_value> REAL_NUM
 %token <lexeme> ID
-%token INT REAL PRINT BLOCK
+%token INT REAL PRINT BLOCK RETURN
 
 %type <type> type
+%type <statement_result> statement
+%type <statement_result> stmt_block
 %type <expr_result> expr
 
 %left '+'
@@ -115,16 +130,21 @@ Program *MAIN = NULL;
 %%
 
 scope : statements { exit(0); }
+      | /* epsilon */ { exit(0); }
 
 statements : statement ';' statements
            | statement ';'
            ;
 
-statement : expr
-          | ID ':' type '=' expr { initial_assignment($1, $3, $5); }
-          | PRINT '(' expr ')' { print_expr_result($3); }
-          | BLOCK '{' { new_scope(); } statements { destroy_scope(); } '}'
+statement : expr { $$ = build_statement_result_from($1); }
+          | ID ':' type '=' statement { initial_assignment($1, $3, $5); $$ = build_void_statement_result(); }
+          | PRINT '(' expr ')' { print_expr_result($3); $$ = build_void_statement_result(); }
+          | BLOCK '{' { new_scope(); } stmt_block { destroy_scope(); } '}' { $$ = $4; }
           ;
+
+stmt_block : statements { $$ = build_void_statement_result(); }
+           | statements RETURN expr ';' { $$ = build_statement_result_from($3); }
+           | RETURN expr ';' { $$ = build_statement_result_from($2); }
 
 type : INT { $$ = INT_TYPE; }
      | REAL { $$ = REAL_TYPE; }
@@ -144,7 +164,7 @@ expr : '(' expr ')' { $$ = $2; }
 void check_types_eq(Type type1, Type type2) {
       if (type1 != type2)
             yyerror("incompatible types");
-}
+}            
 
 Program *get_program() {
       if (MAIN == NULL) MAIN = malloc(sizeof(Program));
@@ -260,7 +280,25 @@ SymbolTableEntry *lookup(char *name) {
 
 void delete(char *name) {
       SymbolTable *symbol_table = get_symbol_table(0);
-      // TODO: implement deletion, needed only in case of scoping.
+
+      if (strcmp(symbol_table->head->entry->name, name) == 0) {
+            SymbolTableNode *head = symbol_table->head;
+            symbol_table->head = head->next;
+            free(head);
+      } else {
+            SymbolTableNode *prev = NULL;
+            SymbolTableNode *current = symbol_table->head;
+
+            while (current != NULL && strcmp(current->entry->name, name) != 0) {
+                  prev = current;
+                  current = current->next;
+            }
+
+            if (current != NULL) {
+                  prev->next = current->next;
+                  free(current);
+            }
+      }
 }
 
 void print_symbol_table(SymbolTable *symbol_table) {
@@ -272,9 +310,26 @@ void print_symbol_table(SymbolTable *symbol_table) {
       }
 }
 
-void initial_assignment(char *variable_name, Type variable_type, ExprResult *expr_result) {
-      check_types_eq(variable_type, expr_result->type);
-      insert(variable_name, variable_type, expr_result->data);
+void initial_assignment(char *variable_name, Type variable_type, StatementResult *statement_result) {
+      check_types_eq(variable_type, statement_result->type);
+      insert(variable_name, variable_type, statement_result->data);
+}
+
+StatementResult *build_statement_result(Type type, TypeData data) {
+      StatementResult *statement_result = malloc(sizeof(StatementResult));
+      statement_result->type = type;
+      statement_result->data = data;
+
+      return statement_result;
+}
+
+StatementResult *build_statement_result_from(ExprResult *expr_result) {
+      return build_statement_result(expr_result->type, expr_result->data);
+}
+
+StatementResult *build_void_statement_result() {
+      TypeData data;
+      return build_statement_result(VOID_TYPE, data);
 }
 
 ExprResult *build_expr_result(Type type, TypeData data) {
