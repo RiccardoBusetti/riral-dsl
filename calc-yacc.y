@@ -175,8 +175,20 @@ Program *get_program() {
 
 void destroy_scope() {
       Program *program = get_program();
+      Scope *current = program->current;
 
-      if (program->current != NULL) {
+      if (current != NULL) {
+            SymbolTable *symbol_table = current->symbol_table;
+            SymbolTableNode *current = symbol_table->head;
+            while (current != NULL) {
+                  SymbolTableNode *next = current->next;
+                  free(current->entry);
+                  free(current);
+                  current = next;
+            }
+
+            free(symbol_table);
+            free(current);
             program->current = program->current->outer;
       }
 }

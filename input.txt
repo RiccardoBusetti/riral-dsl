@@ -1,6 +1,4 @@
-pippo: int = 20;
-ciao: real = block {
-    print(pippo);
+block {
     ciao: real = 20.0;
     return (ciao + 1) + 2.5;
 };
