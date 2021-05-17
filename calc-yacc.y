@@ -330,7 +330,7 @@ ExprResult *operation(ExprResult *left, ExprResult *right, Operation operation) 
             case EXP_OP: 
                   return exp_op(left, right);
             case LOG_OP: 
-                  return exp_op(left, right);
+                  return log_op(left, right);
             default:
                   return left;
       }
@@ -468,7 +468,7 @@ ExprResult *log_op(ExprResult *left, ExprResult *right) {
 
       if (left->type == INT_TYPE && right->type == INT_TYPE) {
             log_op->type = REAL_TYPE;
-            log_op->data.int_value = log (left->data.int_value) / log (right->data.int_value);
+            log_op->data.real_value = log (left->data.int_value) / log (right->data.int_value);
       } else if (left->type == INT_TYPE && right->type == REAL_TYPE) {
             log_op->type = REAL_TYPE;
             log_op->data.real_value = log (left->data.int_value) / log (right->data.real_value);
