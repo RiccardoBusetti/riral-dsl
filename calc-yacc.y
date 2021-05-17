@@ -17,12 +17,14 @@ typedef enum {
 typedef enum {
       VOID_TYPE,
       INT_TYPE,
-      REAL_TYPE
+      REAL_TYPE,
+      STRING_TYPE
 } Type;
 
 typedef union {
       int int_value;
       double real_value;
+      char *string_value;
 } TypeData;
 
 
@@ -120,6 +122,7 @@ Program *MAIN = NULL;
 %union {
         int int_value;
         double real_value;
+        char *string_value;
         char *lexeme;
         Type type;
         StatementResult *statement_result;
@@ -128,8 +131,9 @@ Program *MAIN = NULL;
 
 %token <int_value> INT_NUM
 %token <real_value> REAL_NUM
+%token <string_value> STRING_CONTENT
 %token <lexeme> ID
-%token INT REAL PRINT BLOCK RETURN
+%token INT REAL PRINT BLOCK RETURN STRING
 
 %type <type> type
 %type <statement_result> statement
@@ -161,12 +165,14 @@ stmt_block : statements { $$ = build_void_statement_result(); }
 
 type : INT { $$ = INT_TYPE; }
      | REAL { $$ = REAL_TYPE; }
+     | STRING { $$ = STRING_TYPE; }
      ;           
 
 expr : '(' expr ')' { $$ = $2; }
      | expr '+' expr { $$ = operation($1, $3, SUM_OP); }
      | INT_NUM { TypeData data; data.int_value = $1; $$ = build_expr_result(INT_TYPE, data); }
      | REAL_NUM { TypeData data; data.real_value = $1; $$ = build_expr_result(REAL_TYPE, data); }
+     | STRING_CONTENT { TypeData data; data.string_value = $1; $$ = build_expr_result(STRING_TYPE, data); }
      | ID { SymbolTableEntry *entry = lookup($1); $$ = build_expr_result(entry->type, entry->data); }
      ;
 
@@ -187,6 +193,7 @@ char *type_to_string(Type type) {
             case VOID_TYPE: return "void";
             case INT_TYPE: return "int";
             case REAL_TYPE: return "real";
+            case STRING_TYPE: return "string";
             default: return "unknown";
       }
 }
@@ -423,6 +430,9 @@ void print_expr_result(ExprResult *expr_result) {
 		  break;
 	    case REAL_TYPE:
 		  fprintf(fp, "real: %f\n", expr_result->data.real_value);
+		  break;
+	    case STRING_TYPE:
+		  fprintf(fp, "string: %s\n", expr_result->data.string_value);
 		  break;
 	    default:
 		  fprintf(fp, "Unknown type\n");   

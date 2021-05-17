@@ -8,6 +8,7 @@ DIGIT [0-9]
 INT_NUM {DIGIT}+
 REAL_NUM {DIGIT}+\.({DIGIT}+)?
 ID [a-zA-Z]+
+STRING_CONTENT \"[a-zA-Z0-9.]+\"
 
 %%
 
@@ -29,9 +30,13 @@ ID [a-zA-Z]+
 
 "=" { return '='; }
 
+"\"" { return '"'; }
+
 "int" { return INT; }
 
 "real" { return REAL; }
+
+"string" { return STRING; }
 
 "print" { return PRINT; }
 
@@ -48,6 +53,13 @@ ID [a-zA-Z]+
             yylval.real_value = atof(yytext);
             return REAL_NUM;
            }
+     
+{STRING_CONTENT} { 
+                  char *string = yytext;
+                  string++[strlen(yytext) - 1] = 0;
+		              yylval.string_value = strdup(string);
+		              return STRING_CONTENT;
+		             }
 
 {ID} {
       yylval.lexeme = strdup(yytext);
