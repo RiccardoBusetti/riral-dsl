@@ -7,6 +7,7 @@
 #define ERROR_BUFFER_SIZE 100
 #define OUTPUT_FILE "output.txt"
 
+
 /* OPERATORS */
 typedef enum {
       SUM_OP
@@ -92,6 +93,7 @@ void new_scope();
 SymbolTable *init_symbol_table();
 SymbolTable *get_symbol_table(int scope_index);
 void insert(char *name, Type type, TypeData data);
+void update(char *name, Type type, TypeData data);
 SymbolTableEntry *search(char *name, int current_only);
 SymbolTableEntry *lookup(char *name);
 void delete(char *name);
@@ -100,6 +102,7 @@ void print_symbol_table(SymbolTable *symbol_table);
 
 /* GENERIC FUNCTIONS */
 void initial_assignment(char *variable_name, Type variable_type, StatementResult *statement_result);
+void existing_assignment(char *variable_name, StatementResult *statement_result);
 
 
 /* STATEMENT FUNCTIONS */
@@ -155,6 +158,7 @@ statements : statement ';' statements
 
 statement : expr { $$ = build_statement_result_from($1); }
           | ID ':' type '=' statement { initial_assignment($1, $3, $5); $$ = build_void_statement_result(); }
+          | ID '=' statement { existing_assignment($1, $3); $$ = build_void_statement_result(); }
           | PRINT '(' expr ')' { print_expr_result($3); $$ = build_void_statement_result(); }
           | BLOCK '{' { new_scope(); } stmt_block { destroy_scope(); } '}' { $$ = $4; }
           ;
@@ -287,6 +291,19 @@ void insert(char *name, Type type, TypeData data) {
       }
 }
 
+void update(char *name, Type type, TypeData data) {
+      SymbolTableEntry *found_entry = search(name, 0);
+      if (found_entry == NULL) {
+            char message[ERROR_BUFFER_SIZE];
+            sprintf(message, "the variable %s is not in this scope", name);
+            yyerror(message);
+      }
+
+      check_types_eq(found_entry->type, type);
+
+      found_entry->data = data;
+}
+
 SymbolTableEntry *search(char *name, int current_only) {
       int scope_index = 0;
       SymbolTable *symbol_table = NULL;
@@ -362,6 +379,11 @@ void initial_assignment(char *variable_name, Type variable_type, StatementResult
       check_types_eq(variable_type, statement_result->type);
       insert(variable_name, variable_type, statement_result->data);
 }
+
+void existing_assignment(char *variable_name, StatementResult *statement_result) {
+      update(variable_name, statement_result->type, statement_result->data);
+}
+
 
 StatementResult *build_statement_result(Type type, TypeData data) {
       StatementResult *statement_result = malloc(sizeof(StatementResult));
