@@ -8,6 +8,7 @@ DIGIT [0-9]
 INT_NUM {DIGIT}+
 REAL_NUM {DIGIT}+\.({DIGIT}+)?
 ID [a-zA-Z]+
+STRING_CONTENT \"[a-zA-Z0-9.]+\"
 
 %%
 
@@ -29,9 +30,13 @@ ID [a-zA-Z]+
 
 "=" { return '='; }
 
+"\"" { return '"'; }
+
 "int" { return INT; }
 
 "real" { return REAL; }
+
+"string" { return STRING; }
 
 "print" { return PRINT; }
 
@@ -53,6 +58,11 @@ ID [a-zA-Z]+
       yylval.lexeme = strdup(yytext);
       return ID;
      }
+     
+{STRING_CONTENT} { 
+		yylval.string_value = strdup(yytext);
+		return STRING_CONTENT;
+		}
 
 . { printf("The symbol %s is unknown.\n", yytext); exit(0); }
 
