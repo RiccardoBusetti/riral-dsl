@@ -4,6 +4,8 @@
 #include <ctype.h>
 #include <stdio.h>
 
+#define ERROR_BUFFER_SIZE 100
+
 /* OPERATORS */
 typedef enum {
       SUM_OP
@@ -204,7 +206,7 @@ void insert(char *name, Type type, TypeData data) {
       node->entry = entry;
 
       if (search(name) != NULL) {
-            char *message;
+            char message[ERROR_BUFFER_SIZE];
             sprintf(message, "variable %s is already declared in this scope", name);
             yyerror(message);
       }
@@ -248,7 +250,7 @@ SymbolTableEntry *search(char *name) {
 SymbolTableEntry *lookup(char *name) {
       SymbolTableEntry *found_entry = search(name);
       if (found_entry == NULL) {
-            char *message;
+            char message[ERROR_BUFFER_SIZE];
             sprintf(message, "the variable %s is not in this scope", name);
             yyerror(message);
       }
@@ -317,17 +319,20 @@ ExprResult *sum(ExprResult *left, ExprResult *right) {
 }
 
 void print_expr_result(ExprResult *expr_result) {
-      switch (expr_result->type) {
-            case INT_TYPE:
-                  printf("int: %i\n", expr_result->data.int_value);
-                  break;
-            case REAL_TYPE:
-                  printf("real: %f\n", expr_result->data.real_value);
-                  break;
-            default:
-                  printf("Unknown type\n");   
-                  break;   
+	FILE * fp;
+	fp = fopen ("result.txt","a");
+	switch (expr_result->type) {
+	    case INT_TYPE:
+		  fprintf(fp, "int: %i\n", expr_result->data.int_value);
+		  break;
+	    case REAL_TYPE:
+		  fprintf(fp, "real: %f\n", expr_result->data.real_value);
+		  break;
+	    default:
+		  fprintf(fp, "Unknown type\n");   
+		  break;   
       }
+      fclose (fp);
 }
 
 void yyerror(const char *s) {
@@ -335,10 +340,24 @@ void yyerror(const char *s) {
     exit(0);
 }
 
-int main(void) {
-      printf("Waiting for input...\n");
+void parse(FILE* fileInput) {
+        yyin= fileInput;
+        while(feof(yyin) == 0) {
+        	yyparse();
+        }
+}
 
-      new_scope();
+int main(int argc,char* argv[]) {
+	FILE * fp;
+	fp = fopen ("result.txt","w");
+	fclose (fp);
+	FILE* fileInput;
+	char inputBuffer[36];
+	char lineData[36];
 
-      return yyparse();
+	if((fileInput=fopen(argv[1],"r")) == NULL) {
+		printf("Error reading files, the program terminates immediately\n");
+		exit(0);
+	}
+	parse(fileInput);
 } 
