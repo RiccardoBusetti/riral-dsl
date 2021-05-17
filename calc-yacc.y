@@ -69,20 +69,24 @@ typedef struct {
 } ExprResult;
 
 
-/* FUNCTION PROTOTYPES */
+/* HELPER FUNCTIONS */
 int yylex();
 void yyerror(const char *s);
 void parse(FILE *fileInput);
-
-char *interpolate(char *string, ...);
-
 void check_types_eq(Type type1, Type type2);
+char *type_to_string(Type type);
 
+
+/* PROGRAM FUNCTIONS */
 Program *get_program();
 
+
+/* SCOPE FUNCTIONS */
 void destroy_scope();
 void new_scope();
 
+
+/* SYMBOL TABLE FUNCTIONS */
 SymbolTable *init_symbol_table();
 SymbolTable *get_symbol_table(int scope_index);
 void insert(char *name, Type type, TypeData data);
@@ -91,18 +95,25 @@ SymbolTableEntry *lookup(char *name);
 void delete(char *name);
 void print_symbol_table(SymbolTable *symbol_table);
 
+
+/* GENERIC FUNCTIONS */
 void initial_assignment(char *variable_name, Type variable_type, StatementResult *statement_result);
 
+
+/* STATEMENT FUNCTIONS */
 StatementResult *build_statement_result(Type type, TypeData data);
 StatementResult *build_statement_result_from(ExprResult *expr_result);
 StatementResult *build_void_statement_result();
 
+
+/* EXPRESSION FUNCTIONS */
 ExprResult *build_expr_result(Type type, TypeData data);
 ExprResult *operation(ExprResult *left, ExprResult *right, Operation operation);
 ExprResult *sum(ExprResult *left, ExprResult *right);
-
 void print_expr_result(ExprResult *expr_result);
 
+
+/* GLOBAL VARIABLES */
 Program *MAIN = NULL;
 %}
 
@@ -164,9 +175,21 @@ expr : '(' expr ')' { $$ = $2; }
 #include "lex.yy.c"
 
 void check_types_eq(Type type1, Type type2) {
-      if (type1 != type2)
-            yyerror("incompatible types");
-}            
+      if (type1 != type2) {
+            char message[ERROR_BUFFER_SIZE];
+            sprintf(message, "incompatible types\nrequired: %s\nfound: %s", type_to_string(type1), type_to_string(type2));
+            yyerror(message);
+      }
+}
+
+char *type_to_string(Type type) {
+      switch (type) {
+            case VOID_TYPE: return "void";
+            case INT_TYPE: return "int";
+            case REAL_TYPE: return "real";
+            default: return "unknown";
+      }
+}
 
 Program *get_program() {
       if (MAIN == NULL) MAIN = malloc(sizeof(Program));
@@ -175,21 +198,22 @@ Program *get_program() {
 
 void destroy_scope() {
       Program *program = get_program();
-      Scope *current = program->current;
+      Scope *current_scope = program->current;
 
-      if (current != NULL) {
-            SymbolTable *symbol_table = current->symbol_table;
-            SymbolTableNode *current = symbol_table->head;
-            while (current != NULL) {
-                  SymbolTableNode *next = current->next;
-                  free(current->entry);
-                  free(current);
-                  current = next;
+      if (current_scope != NULL) {
+            SymbolTable *symbol_table = current_scope->symbol_table;
+            SymbolTableNode *current_node = symbol_table->head;
+
+            while (current_node != NULL) {
+                  SymbolTableNode *next = current_node->next;
+                  free(current_node->entry);
+                  free(current_node);
+                  current_node = next;
             }
 
             free(symbol_table);
-            free(current);
-            program->current = program->current->outer;
+            program->current = current_scope->outer;
+            free(current_scope);
       }
 }
 
@@ -244,8 +268,7 @@ void insert(char *name, Type type, TypeData data) {
             sprintf(message, "variable %s is already declared in this scope", name);
             yyerror(message);
       }
-            
-
+      
       if (symbol_table->head == NULL) {
             // The symbol table is empty, initialize it.
             symbol_table->head = node;
@@ -381,7 +404,7 @@ ExprResult *sum(ExprResult *left, ExprResult *right) {
             sum->type = REAL_TYPE;
             sum->data.real_value = left->data.real_value + right->data.real_value;
       } else {
-            yyerror("invalid type/s for expression +");
+            yyerror("invalid types for expression +");
       }
 
       return sum;
@@ -427,5 +450,7 @@ int main(int argc, char* argv[]) {
 	      exit(0);
 	}
 
+      // It is important here to initialize the global scope.
+      new_scope();
 	parse(fileInput);
 } 

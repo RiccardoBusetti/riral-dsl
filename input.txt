@@ -1,5 +1,5 @@
-block {
-    ciao: real = 20.0;
-    return (ciao + 1) + 2.5;
+result: real = block {
+    pi: real = 3.14;
+    return pi + pi;
 };
-print(ciao);
+print(pi);

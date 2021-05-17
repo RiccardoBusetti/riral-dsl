@@ -54,6 +54,6 @@ ID [a-zA-Z]+
       return ID;
      }
 
-. { }
+. { printf("The symbol %s is unknown.\n", yytext); exit(0); }
 
 %%
