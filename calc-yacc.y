@@ -90,7 +90,7 @@ void new_scope();
 SymbolTable *init_symbol_table();
 SymbolTable *get_symbol_table(int scope_index);
 void insert(char *name, Type type, TypeData data);
-SymbolTableEntry *search(char *name);
+SymbolTableEntry *search(char *name, int current_only);
 SymbolTableEntry *lookup(char *name);
 void delete(char *name);
 void print_symbol_table(SymbolTable *symbol_table);
@@ -263,7 +263,7 @@ void insert(char *name, Type type, TypeData data) {
       SymbolTableNode *node = malloc(sizeof(SymbolTableNode));
       node->entry = entry;
 
-      if (search(name) != NULL) {
+      if (search(name, 1) != NULL) {
             char message[ERROR_BUFFER_SIZE];
             sprintf(message, "variable %s is already declared in this scope", name);
             yyerror(message);
@@ -280,7 +280,7 @@ void insert(char *name, Type type, TypeData data) {
       }
 }
 
-SymbolTableEntry *search(char *name) {
+SymbolTableEntry *search(char *name, int current_only) {
       int scope_index = 0;
       SymbolTable *symbol_table = NULL;
 
@@ -297,6 +297,10 @@ SymbolTableEntry *search(char *name) {
                         current = current->next;
                   }
 
+                  if (current_only == 1) {
+                        return NULL;
+                  }
+
                   scope_index++;
             }
       } while (symbol_table != NULL);
@@ -305,7 +309,7 @@ SymbolTableEntry *search(char *name) {
 }
 
 SymbolTableEntry *lookup(char *name) {
-      SymbolTableEntry *found_entry = search(name);
+      SymbolTableEntry *found_entry = search(name, 0);
       if (found_entry == NULL) {
             char message[ERROR_BUFFER_SIZE];
             sprintf(message, "the variable %s is not in this scope", name);
