@@ -1,6 +1,7 @@
-pi: real = 3.14;
-result: real = block {
-    doublepi: real = pi + pi;
-    print(doublepi);
-    return doublepi;
+pippo: int = 20;
+ciao: real = block {
+    print(pippo);
+    ciao: real = 20.0;
+    return (ciao + 1) + 2.5;
 };
+print(ciao);

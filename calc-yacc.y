@@ -5,6 +5,7 @@
 #include <stdio.h>
 
 #define ERROR_BUFFER_SIZE 100
+#define OUTPUT_FILE "output.txt"
 
 /* OPERATORS */
 typedef enum {
@@ -374,8 +375,8 @@ ExprResult *sum(ExprResult *left, ExprResult *right) {
 }
 
 void print_expr_result(ExprResult *expr_result) {
-	FILE * fp;
-	fp = fopen ("result.txt","a");
+	FILE *fp = fopen(OUTPUT_FILE, "a");
+
 	switch (expr_result->type) {
 	    case INT_TYPE:
 		  fprintf(fp, "int: %i\n", expr_result->data.int_value);
@@ -396,23 +397,24 @@ void yyerror(const char *s) {
 }
 
 void parse(FILE* fileInput) {
-        yyin= fileInput;
-        while(feof(yyin) == 0) {
-        	yyparse();
-        }
+      yyin = fileInput;
+      while(feof(yyin) == 0) {
+            yyparse();
+      }
 }
 
-int main(int argc,char* argv[]) {
-	FILE * fp;
-	fp = fopen ("result.txt","w");
+int main(int argc, char* argv[]) {
+	FILE *fp = fopen(OUTPUT_FILE, "w");
 	fclose (fp);
+      
 	FILE* fileInput;
 	char inputBuffer[36];
 	char lineData[36];
 
-	if((fileInput=fopen(argv[1],"r")) == NULL) {
-		printf("Error reading files, the program terminates immediately\n");
-		exit(0);
+	if((fileInput = fopen(argv[1], "r")) == NULL) {
+	      printf("Error while reading the file, try again.\n");
+	      exit(0);
 	}
+
 	parse(fileInput);
 } 

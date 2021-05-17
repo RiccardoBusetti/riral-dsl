@@ -1,3 +1,3 @@
 chmod 777 MakeFile
 ./MakeFile
-./a.out
+./a.out input.txt
