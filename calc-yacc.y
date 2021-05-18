@@ -12,10 +12,15 @@ typedef enum {
       MOL_OP,
       DIV_OP,
       EXP_OP,
+      FAC_OP,
+      NEG_OP,
       LN_OP,
       LOG_OP,
       LOG10_OP,
-      SQRT_OP
+      SQRT_OP,
+      SIN_OP,
+      COS_OP,
+      TAN_OP
 } Operation;
 
 
@@ -101,9 +106,14 @@ ExprResult *exp_op(ExprResult *left, ExprResult *right);
 ExprResult *log_op(ExprResult *left, ExprResult *right);
 
 ExprResult *single_operation(ExprResult *left, Operation operation);
+ExprResult *neg_op(ExprResult *left);
+ExprResult *fac_op(ExprResult *left);
 ExprResult *ln_op(ExprResult *left);
 ExprResult *log10_op(ExprResult *left);
 ExprResult *sqrt_op(ExprResult *left);
+ExprResult *sin_op(ExprResult *left);
+ExprResult *cos_op(ExprResult *left);
+ExprResult *tan_op(ExprResult *left);
 
 void print_expr_result(ExprResult *expr_result);
 
@@ -129,8 +139,9 @@ Program *MAIN = NULL;
 
 %left '-' '+'
 %left '*' '/'
-%left '^' 
-%left LOG LN LOG10 SQRT
+%left '^' '!'
+%left LOG LN LOG10 SQRT SIN COS TAN
+%right UMINUS
 
 %start scope
 
@@ -158,10 +169,15 @@ expr : '(' expr ')' { $$ = $2; }
      | expr '*' expr { $$ = operation($1, $3, MOL_OP); }
      | expr '/' expr { $$ = operation($1, $3, DIV_OP); }
      | expr '^' expr { $$ = operation($1, $3, EXP_OP); }
+     | expr '!' { $$ = single_operation($1, FAC_OP); }
+     | '-' expr %prec UMINUS { $$ = single_operation($2,  NEG_OP); }
      | LOG '(' expr ',' expr ')' { $$ = operation($3, $5, LOG_OP); }
-     | LN '(' expr ')' { $$ = single_operation($3,  LN_OP); }
+     | LN '(' expr ')' { $$ = single_operation($3, LN_OP); }
      | LOG10 '(' expr ')' { $$ = single_operation($3, LOG10_OP); }
-     | SQRT '(' expr ')' { $$ = single_operation($3,  SQRT_OP); }
+     | SQRT '(' expr ')' { $$ = single_operation($3, SQRT_OP); }
+     | SIN '(' expr ')' { $$ = single_operation($3, SIN_OP); }
+     | COS '(' expr ')' { $$ = single_operation($3, COS_OP); }
+     | TAN '(' expr ')' { $$ = single_operation($3, TAN_OP); }
      | INT_NUM { TypeData data; data.int_value = $1; $$ = build_expr_result(INT_TYPE, data); }
      | REAL_NUM { TypeData data; data.real_value = $1; $$ = build_expr_result(REAL_TYPE, data); }
      | ID { SymbolTableEntry *entry = lookup($1); $$ = build_expr_result(entry->type, entry->data); }
@@ -340,12 +356,22 @@ ExprResult *single_operation(ExprResult *left, Operation operation) {
       ExprResult *new_result;
 
       switch (operation) {
+            case NEG_OP: 
+                  return neg_op(left);
+            case FAC_OP: 
+                  return fac_op(left);
             case LN_OP: 
                   return ln_op(left);
             case LOG10_OP: 
                   return log10_op(left);
             case SQRT_OP: 
                   return sqrt_op(left);
+            case SIN_OP: 
+                  return sin_op(left);
+            case COS_OP: 
+                  return cos_op(left);
+            case TAN_OP: 
+                  return tan_op(left);
             default:
                   return left;
       }
@@ -485,13 +511,49 @@ ExprResult *log_op(ExprResult *left, ExprResult *right) {
       return log_op;
 }
 
+ExprResult *neg_op(ExprResult *left) {
+      ExprResult *neg_op = malloc(sizeof(ExprResult));
+
+      if (left->type == INT_TYPE) {
+            neg_op->type = INT_TYPE;
+            neg_op->data.int_value = - left->data.int_value;
+      } else if (left->type == REAL_TYPE) {
+            neg_op->type = REAL_TYPE;
+            neg_op->data.real_value = - left->data.int_value;
+      } else {
+            yyerror("invalid type/s for expression -");
+      }
+
+      return neg_op;
+}
+
+ExprResult *fac_op(ExprResult *left) {
+      ExprResult *fac_op = malloc(sizeof(ExprResult));
+      if (left->type == INT_TYPE) {
+            fac_op->type = INT_TYPE;
+            int n = left->data.int_value;
+            if (n < 0){
+                  yyerror("invalid type/s for expression !");
+            }
+            int fact = 1;  
+            for (int i = 1; i <= n; ++i) {
+                  fact *= i;
+            }
+            fac_op->data.int_value = fact;
+      } else {
+            yyerror("invalid type/s for expression !");
+      }
+
+      return fac_op;
+}
+
 ExprResult *ln_op(ExprResult *left) {
       ExprResult *ln_op = malloc(sizeof(ExprResult));
 
       if (left->type == INT_TYPE) {
             ln_op->type = REAL_TYPE;
             ln_op->data.real_value = log (left->data.int_value);
-      } else if (left->type == INT_TYPE) {
+      } else if (left->type == REAL_TYPE) {
             ln_op->type = REAL_TYPE;
             ln_op->data.real_value = log (left->data.int_value);
       } else {
@@ -507,9 +569,9 @@ ExprResult *log10_op(ExprResult *left) {
       if (left->type == INT_TYPE) {
             log10_op->type = REAL_TYPE;
             log10_op->data.real_value= log10 (left->data.int_value);
-      } else if (left->type == INT_TYPE) {
+      } else if (left->type == REAL_TYPE) {
             log10_op->type = REAL_TYPE;
-            log10_op->data.real_value = log10 (left->data.int_value);
+            log10_op->data.real_value = log10 (left->data.real_value);
       } else {
             yyerror("invalid type/s for expression log10");
       }
@@ -523,14 +585,62 @@ ExprResult *sqrt_op(ExprResult *left) {
       if (left->type == INT_TYPE) {
             sqrt_op->type = REAL_TYPE;
             sqrt_op->data.real_value= sqrt (left->data.int_value);
-      } else if (left->type == INT_TYPE) {
+      } else if (left->type == REAL_TYPE) {
             sqrt_op->type = REAL_TYPE;
-            sqrt_op->data.real_value = sqrt (left->data.int_value);
+            sqrt_op->data.real_value = sqrt (left->data.real_value);
       } else {
             yyerror("invalid type/s for expression sqrt");
       }
 
       return sqrt_op;
+}
+
+ExprResult *sin_op(ExprResult *left) {
+      ExprResult *sin_op = malloc(sizeof(ExprResult));
+
+      if (left->type == INT_TYPE) {
+            sin_op->type = REAL_TYPE;
+            sin_op->data.real_value= sin (left->data.int_value);
+      } else if (left->type == REAL_TYPE) {
+            sin_op->type = REAL_TYPE;
+            sin_op->data.real_value = sin (left->data.real_value);
+      } else {
+            yyerror("invalid type/s for expression sin");
+      }
+
+      return sin_op;
+}
+
+ExprResult *cos_op(ExprResult *left) {
+      ExprResult *cos_op = malloc(sizeof(ExprResult));
+
+      if (left->type == INT_TYPE) {
+            cos_op->type = REAL_TYPE;
+            cos_op->data.real_value= cos (left->data.int_value);
+      } else if (left->type == REAL_TYPE) {
+            cos_op->type = REAL_TYPE;
+            cos_op->data.real_value = cos (left->data.real_value);
+      } else {
+            yyerror("invalid type/s for expression cos");
+      }
+
+      return cos_op;
+}
+
+ExprResult *tan_op(ExprResult *left) {
+      ExprResult *tan_op = malloc(sizeof(ExprResult));
+
+      if (left->type == INT_TYPE) {
+            tan_op->type = REAL_TYPE;
+            tan_op->data.real_value= tan (left->data.int_value);
+      } else if (left->type == REAL_TYPE) {
+            tan_op->type = REAL_TYPE;
+            tan_op->data.real_value = tan (left->data.real_value);
+      } else {
+            yyerror("invalid type/s for expression tan");
+      }
+
+      return tan_op;
 }
 
 void print_expr_result(ExprResult *expr_result) {

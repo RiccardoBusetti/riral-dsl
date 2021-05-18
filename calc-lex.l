@@ -31,6 +31,8 @@ ID [a-zA-Z]+
 
 "^" { return '^'; }
 
+"!" { return '!'; }
+
 "ln" { return LN; }
 
 "log" { return LOG; }
@@ -38,6 +40,12 @@ ID [a-zA-Z]+
 "log10" { return LOG10;}
 
 "sqrt" { return SQRT;}
+
+"sin" { return SIN;}
+
+"cos" { return COS;}
+
+"tan" { return TAN;}
 
 "," { return ','; }
 
