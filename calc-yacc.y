@@ -521,7 +521,7 @@ ExprResult *sum(ExprResult *left, ExprResult *right) {
             sum->type = REAL_TYPE;
             sum->data.real_value = left->data.real_value + right->data.real_value;
       } else {
-            yyerror("invalid types for expression +");
+            yyerror("invalid type/s for expression +");
       }
 
       return sum;
@@ -598,16 +598,16 @@ ExprResult *exp_op(ExprResult *left, ExprResult *right) {
 
       if (left->type == INT_TYPE && right->type == INT_TYPE) {
             exp_op->type = INT_TYPE;
-            exp_op->data.int_value = pow (left->data.int_value, right->data.int_value);
+            exp_op->data.int_value = pow(left->data.int_value, right->data.int_value);
       } else if (left->type == INT_TYPE && right->type == REAL_TYPE) {
             exp_op->type = REAL_TYPE;
-            exp_op->data.real_value = pow (left->data.int_value, right->data.real_value);
+            exp_op->data.real_value = pow(left->data.int_value, right->data.real_value);
       } else if (left->type == REAL_TYPE && right->type == INT_TYPE) {
             exp_op->type = REAL_TYPE;
-            exp_op->data.real_value = pow (left->data.real_value, right->data.int_value);
+            exp_op->data.real_value = pow(left->data.real_value, right->data.int_value);
       } else if (left->type == REAL_TYPE && right->type == REAL_TYPE) {
             exp_op->type = REAL_TYPE;
-            exp_op->data.real_value = pow (left->data.real_value, right->data.real_value);
+            exp_op->data.real_value = pow(left->data.real_value, right->data.real_value);
       } else {
             yyerror("invalid type/s for expression ^");
       }
@@ -620,16 +620,16 @@ ExprResult *log_op(ExprResult *left, ExprResult *right) {
 
       if (left->type == INT_TYPE && right->type == INT_TYPE) {
             log_op->type = REAL_TYPE;
-            log_op->data.real_value = log (left->data.int_value) / log (right->data.int_value);
+            log_op->data.real_value = log(left->data.int_value) / log(right->data.int_value);
       } else if (left->type == INT_TYPE && right->type == REAL_TYPE) {
             log_op->type = REAL_TYPE;
-            log_op->data.real_value = log (left->data.int_value) / log (right->data.real_value);
+            log_op->data.real_value = log(left->data.int_value) / log(right->data.real_value);
       } else if (left->type == REAL_TYPE && right->type == INT_TYPE) {
             log_op->type = REAL_TYPE;
-            log_op->data.real_value = log (left->data.real_value) / log (right->data.int_value);
+            log_op->data.real_value = log(left->data.real_value) / log(right->data.int_value);
       } else if (left->type == REAL_TYPE && right->type == REAL_TYPE) {
             log_op->type = REAL_TYPE;
-            log_op->data.real_value = log (left->data.real_value) / log (right->data.real_value);
+            log_op->data.real_value = log(left->data.real_value) / log(right->data.real_value);
       } else {
             yyerror("invalid type/s for expression log");
       }
@@ -642,10 +642,10 @@ ExprResult *neg_op(ExprResult *left) {
 
       if (left->type == INT_TYPE) {
             neg_op->type = INT_TYPE;
-            neg_op->data.int_value = - left->data.int_value;
+            neg_op->data.int_value = -(left->data.int_value);
       } else if (left->type == REAL_TYPE) {
             neg_op->type = REAL_TYPE;
-            neg_op->data.real_value = - left->data.int_value;
+            neg_op->data.real_value = -(left->data.int_value);
       } else {
             yyerror("invalid type/s for expression -");
       }
@@ -658,13 +658,11 @@ ExprResult *fac_op(ExprResult *left) {
       if (left->type == INT_TYPE) {
             fac_op->type = INT_TYPE;
             int n = left->data.int_value;
-            if (n < 0){
-                  yyerror("invalid type/s for expression !");
-            }
+            if (n < 0) yyerror("invalid type/s for expression !");
+
             int fact = 1;  
-            for (int i = 1; i <= n; ++i) {
-                  fact *= i;
-            }
+            for (int i = 1; i <= n; ++i) fact *= i;
+
             fac_op->data.int_value = fact;
       } else {
             yyerror("invalid type/s for expression !");
@@ -678,10 +676,10 @@ ExprResult *ln_op(ExprResult *left) {
 
       if (left->type == INT_TYPE) {
             ln_op->type = REAL_TYPE;
-            ln_op->data.real_value = log (left->data.int_value);
+            ln_op->data.real_value = log(left->data.int_value);
       } else if (left->type == REAL_TYPE) {
             ln_op->type = REAL_TYPE;
-            ln_op->data.real_value = log (left->data.int_value);
+            ln_op->data.real_value = log(left->data.int_value);
       } else {
             yyerror("invalid type/s for expression ln");
       }
@@ -694,10 +692,10 @@ ExprResult *log10_op(ExprResult *left) {
 
       if (left->type == INT_TYPE) {
             log10_op->type = REAL_TYPE;
-            log10_op->data.real_value= log10 (left->data.int_value);
+            log10_op->data.real_value= log10(left->data.int_value);
       } else if (left->type == REAL_TYPE) {
             log10_op->type = REAL_TYPE;
-            log10_op->data.real_value = log10 (left->data.real_value);
+            log10_op->data.real_value = log10(left->data.real_value);
       } else {
             yyerror("invalid type/s for expression log10");
       }
@@ -710,10 +708,10 @@ ExprResult *sqrt_op(ExprResult *left) {
 
       if (left->type == INT_TYPE) {
             sqrt_op->type = REAL_TYPE;
-            sqrt_op->data.real_value= sqrt (left->data.int_value);
+            sqrt_op->data.real_value= sqrt(left->data.int_value);
       } else if (left->type == REAL_TYPE) {
             sqrt_op->type = REAL_TYPE;
-            sqrt_op->data.real_value = sqrt (left->data.real_value);
+            sqrt_op->data.real_value = sqrt(left->data.real_value);
       } else {
             yyerror("invalid type/s for expression sqrt");
       }
@@ -726,10 +724,10 @@ ExprResult *sin_op(ExprResult *left) {
 
       if (left->type == INT_TYPE) {
             sin_op->type = REAL_TYPE;
-            sin_op->data.real_value= sin (left->data.int_value);
+            sin_op->data.real_value= sin(left->data.int_value);
       } else if (left->type == REAL_TYPE) {
             sin_op->type = REAL_TYPE;
-            sin_op->data.real_value = sin (left->data.real_value);
+            sin_op->data.real_value = sin(left->data.real_value);
       } else {
             yyerror("invalid type/s for expression sin");
       }
@@ -742,10 +740,10 @@ ExprResult *cos_op(ExprResult *left) {
 
       if (left->type == INT_TYPE) {
             cos_op->type = REAL_TYPE;
-            cos_op->data.real_value= cos (left->data.int_value);
+            cos_op->data.real_value= cos(left->data.int_value);
       } else if (left->type == REAL_TYPE) {
             cos_op->type = REAL_TYPE;
-            cos_op->data.real_value = cos (left->data.real_value);
+            cos_op->data.real_value = cos(left->data.real_value);
       } else {
             yyerror("invalid type/s for expression cos");
       }
@@ -758,10 +756,10 @@ ExprResult *tan_op(ExprResult *left) {
 
       if (left->type == INT_TYPE) {
             tan_op->type = REAL_TYPE;
-            tan_op->data.real_value= tan (left->data.int_value);
+            tan_op->data.real_value= tan(left->data.int_value);
       } else if (left->type == REAL_TYPE) {
             tan_op->type = REAL_TYPE;
-            tan_op->data.real_value = tan (left->data.real_value);
+            tan_op->data.real_value = tan(left->data.real_value);
       } else {
             yyerror("invalid type/s for expression tan");
       }
