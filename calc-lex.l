@@ -24,6 +24,32 @@ STRING_CONTENT \"[a-zA-Z0-9.]+\"
 
 "+" { return '+'; }
 
+"-" { return '-'; }
+
+"*" { return '*'; }
+
+"/" { return '/'; }
+
+"^" { return '^'; }
+
+"!" { return '!'; }
+
+"ln" { return LN; }
+
+"log" { return LOG; }
+
+"log10" { return LOG10;}
+
+"sqrt" { return SQRT;}
+
+"sin" { return SIN;}
+
+"cos" { return COS;}
+
+"tan" { return TAN;}
+
+"," { return ','; }
+
 ":" { return ':'; }
 
 ";" { return ';'; }
