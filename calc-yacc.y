@@ -231,6 +231,9 @@ expr : '(' expr ')' { $$ = $2; }
 
 #include "lex.yy.c"
 
+/**
+      Checks if two types are equal, otherwise throws an error.
+*/
 void check_types_eq(Type type1, Type type2) {
       if (type1 != type2) {
             char message[ERROR_BUFFER_SIZE];
@@ -239,6 +242,9 @@ void check_types_eq(Type type1, Type type2) {
       }
 }
 
+/**
+      Converts a type to its string representation.
+*/
 char *type_to_string(Type type) {
       switch (type) {
             case VOID_TYPE: return "void";
@@ -249,11 +255,23 @@ char *type_to_string(Type type) {
       }
 }
 
+/**
+      Gets the program which is currently running.
+
+      In this case we have one single MAIN program which has linked to it the
+      current scope in execution.      
+*/
 Program *get_program() {
       if (MAIN == NULL) MAIN = malloc(sizeof(Program));
       return MAIN;
 }
 
+/**
+      Destroys the current scope, together with all the symbol table entries.
+
+      If there exist an outer scope we will set that as the new current scope for
+      the program.      
+*/
 void destroy_scope() {
       Program *program = get_program();
       Scope *current_scope = program->current;
@@ -275,6 +293,12 @@ void destroy_scope() {
       }
 }
 
+/**
+      Creates a new scope from the current scope.
+
+      If there exist a current scope it will link that scope as the outer scope
+      of the newly created scope.
+*/
 void new_scope() {
       Program *program = get_program();
 
@@ -292,11 +316,18 @@ void new_scope() {
       }
 }
 
+/**
+      Initialized the symbol table in memory.      
+*/
 SymbolTable *init_symbol_table() {
       SymbolTable *symbol_table = malloc(sizeof(SymbolTable));
       return symbol_table;
 }
 
+/**
+      Gets the symbol table at a given scope index, where the index 0 corresponds
+      to the current scope and the other index + 1 will correspond to the outer scopes.
+*/
 SymbolTable *get_symbol_table(int scope_index) {
       if (MAIN == NULL) new_scope();
 
@@ -310,6 +341,9 @@ SymbolTable *get_symbol_table(int scope_index) {
       return current == NULL ? NULL : current->symbol_table;
 }
 
+/**
+      Inserts an entry into the symbol table.      
+*/
 void insert(char *name, Type type, TypeData data) {
       SymbolTable *symbol_table = get_symbol_table(0);
 
@@ -338,6 +372,11 @@ void insert(char *name, Type type, TypeData data) {
       }
 }
 
+/**
+      Updates an entry into the symbol table.
+
+      This update can be done only if the new type and old type are the same.      
+*/
 void update(char *name, Type type, TypeData data) {
       SymbolTableEntry *found_entry = search(name, 0);
       if (found_entry == NULL) {
@@ -351,6 +390,12 @@ void update(char *name, Type type, TypeData data) {
       found_entry->data = data;
 }
 
+/**
+      Searches for a symbol table entry by name.
+
+      If current only is set to 1 this means that we will search only in the
+      symbol table for the current scope, otherwise it will check in the outer scopes.      
+*/
 SymbolTableEntry *search(char *name, int current_only) {
       int scope_index = 0;
       SymbolTable *symbol_table = NULL;
@@ -379,6 +424,9 @@ SymbolTableEntry *search(char *name, int current_only) {
       return NULL;
 }
 
+/**
+      Looks up for a symbol table entry by name.      
+*/
 SymbolTableEntry *lookup(char *name) {
       SymbolTableEntry *found_entry = search(name, 0);
       if (found_entry == NULL) {
@@ -390,6 +438,9 @@ SymbolTableEntry *lookup(char *name) {
       return found_entry;
 }
 
+/**
+      Deletes an entry in the symbol table by name.      
+*/
 void delete(char *name) {
       SymbolTable *symbol_table = get_symbol_table(0);
 
