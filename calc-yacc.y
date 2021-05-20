@@ -143,7 +143,6 @@ ExprResult *sqrt_op(ExprResult *left);
 ExprResult *sin_op(ExprResult *left);
 ExprResult *cos_op(ExprResult *left);
 ExprResult *tan_op(ExprResult *left);
-
 void print_expr_result(ExprResult *expr_result);
 
 
@@ -263,6 +262,7 @@ char *type_to_string(Type type) {
 */
 Program *get_program() {
       if (MAIN == NULL) MAIN = malloc(sizeof(Program));
+
       return MAIN;
 }
 
@@ -332,13 +332,14 @@ SymbolTable *get_symbol_table(int scope_index) {
       if (MAIN == NULL) new_scope();
 
       int index = 0;
-      Scope *current = MAIN->current;
-      while (current != NULL && index < scope_index) {
-            current = current->outer;
+      Program *program = get_program();
+      Scope *current_scope = program->current;
+      while (current_scope != NULL && index < scope_index) {
+            current_scope = current_scope->outer;
             index++;
       }
 
-      return current == NULL ? NULL : current->symbol_table;
+      return current_scope == NULL ? NULL : current_scope->symbol_table;
 }
 
 /**
@@ -379,6 +380,7 @@ void insert(char *name, Type type, TypeData data) {
 */
 void update(char *name, Type type, TypeData data) {
       SymbolTableEntry *found_entry = search(name, 0);
+
       if (found_entry == NULL) {
             char message[ERROR_BUFFER_SIZE];
             sprintf(message, "the variable %s is not in this scope", name);
@@ -429,6 +431,7 @@ SymbolTableEntry *search(char *name, int current_only) {
 */
 SymbolTableEntry *lookup(char *name) {
       SymbolTableEntry *found_entry = search(name, 0);
+
       if (found_entry == NULL) {
             char message[ERROR_BUFFER_SIZE];
             sprintf(message, "the variable %s is not in this scope", name);
@@ -445,6 +448,7 @@ void delete(char *name) {
       SymbolTable *symbol_table = get_symbol_table(0);
 
       if (strcmp(symbol_table->head->entry->name, name) == 0) {
+            // If we want to delete the head of the list we need to replace it.
             SymbolTableNode *head = symbol_table->head;
             symbol_table->head = head->next;
             free(head);
@@ -452,12 +456,17 @@ void delete(char *name) {
             SymbolTableNode *prev = NULL;
             SymbolTableNode *current = symbol_table->head;
 
+            // We search for the value which we want to delete and we keep his previous element.
             while (current != NULL && strcmp(current->entry->name, name) != 0) {
                   prev = current;
                   current = current->next;
             }
 
             if (current != NULL) {
+                  // If we delete the last element we update the tail.
+                  if (current->next == NULL) 
+                        symbol_table->tail = prev;
+
                   prev->next = current->next;
                   free(current);
             }
@@ -481,7 +490,6 @@ void initial_assignment(char *variable_name, Type variable_type, StatementResult
 void existing_assignment(char *variable_name, StatementResult *statement_result) {
       update(variable_name, statement_result->type, statement_result->data);
 }
-
 
 StatementResult *build_statement_result(Type type, TypeData data) {
       StatementResult *statement_result = malloc(sizeof(StatementResult));
@@ -553,8 +561,6 @@ ExprResult *single_operation(ExprResult *left, Operation operation) {
                   return left;
       }
 }
-
-
 
 ExprResult *sum(ExprResult *left, ExprResult *right) {
       ExprResult *sum = malloc(sizeof(ExprResult));
@@ -832,10 +838,11 @@ void print_expr_result(ExprResult *expr_result) {
 		  fprintf(fp, "string: %s\n", expr_result->data.string_value);
 		  break;
 	    default:
-		  fprintf(fp, "Unknown type\n");   
+		  fprintf(fp, "unknown type\n");   
 		  break;   
       }
-      fclose (fp);
+
+      fclose(fp);
 }
 
 void yyerror(const char *s) {
@@ -861,7 +868,8 @@ int main(int argc, char* argv[]) {
 	      exit(0);
 	}
 
-      // It is important here to initialize the global scope.
+      // It is important here to initialize the global scope before
+      // starting the parsing.
       new_scope();
 	parse(fileInput);
 } 
