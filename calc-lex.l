@@ -48,6 +48,8 @@ STRING_CONTENT \"[a-zA-Z0-9.]+\"
 
 "tan" { return TAN;}
 
+"|" { return '|'; }
+
 "," { return ','; }
 
 ":" { return ':'; }
