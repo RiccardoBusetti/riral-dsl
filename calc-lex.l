@@ -5,10 +5,11 @@
 %}
 
 DIGIT [0-9]
-INT_NUM {DIGIT}+
-REAL_NUM {DIGIT}+\.({DIGIT}+)?
 ID [a-zA-Z]+
-STRING_CONTENT \"[a-zA-Z0-9.]+\"
+BOOLEAN_VAL true|false
+STRING_VAL \"[a-zA-Z0-9.]+\"
+INT_VAL {DIGIT}+
+REAL_VAL {DIGIT}+\.({DIGIT}+)?
 
 %%
 
@@ -64,27 +65,43 @@ STRING_CONTENT \"[a-zA-Z0-9.]+\"
 
 "string" { return STRING; }
 
+"boolean" { return BOOLEAN; }
+
 "print" { return PRINT; }
 
 "block" { return BLOCK; }
 
 "return" { return RETURN; }
 
-{INT_NUM} {
+{INT_VAL} {
             yylval.int_value = atoi(yytext);
-            return INT_NUM;
+            return INT_VAL;
           }
 
-{REAL_NUM} {
+{REAL_VAL} {
             yylval.real_value = atof(yytext);
-            return REAL_NUM;
+            return REAL_VAL;
            }
-     
-{STRING_CONTENT} { 
+           
+{BOOLEAN_VAL} {
+		   printf("hi");
+		   char *bool = strdup(yytext);
+		   int value=strcmp(bool,"true");  
+		   if(value==0) {
+		   	yylval.boolean_value = 0;
+		   	return BOOLEAN_VAL;
+		   }
+		   else {
+		   	yylval.boolean_value = 1;
+		   	return BOOLEAN_VAL;
+		   }
+		}
+		   	
+{STRING_VAL} { 
                   char *string = yytext;
                   string++[strlen(yytext) - 1] = 0;
 		              yylval.string_value = strdup(string);
-		              return STRING_CONTENT;
+		              return STRING_VAL;
 		             }
 
 {ID} {
