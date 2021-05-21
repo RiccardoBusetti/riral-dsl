@@ -8,10 +8,13 @@
 #define ERROR_BUFFER_SIZE 100
 #define OUTPUT_FILE "output.txt"
 
+
+/* BASIC TYPES */
 typedef enum {
       FALSE,
       TRUE
 } Boolean;
+
 
 /* OPERATORS */
 typedef enum {
@@ -231,7 +234,7 @@ expr : '(' expr ')' { $$ = $2; }
      | TAN '(' expr ')' { $$ = single_operation($3, TAN_OP); }
      | INT_VAL { TypeData data; data.int_value = $1; $$ = build_expr_result(INT_TYPE, data); }
      | REAL_VAL { TypeData data; data.real_value = $1; $$ = build_expr_result(REAL_TYPE, data); }
-     | BOOLEAN_VAL { TypeData data; data.boolean_value = $1; $$ = build_expr_result(BOOLEAN_TYPE, data); }
+     | BOOLEAN_VAL { TypeData data; data.boolean_value = $1 == 0 ? FALSE : TRUE; $$ = build_expr_result(BOOLEAN_TYPE, data); }
      | STRING_VAL { TypeData data; data.string_value = $1; $$ = build_expr_result(STRING_TYPE, data); }
      | ID { SymbolTableEntry *entry = lookup($1); $$ = build_expr_result(entry->type, entry->data); }
      ;
@@ -849,7 +852,7 @@ void print_expr_result(ExprResult *expr_result) {
 		  fprintf(fp, "string: %s\n", expr_result->data.string_value);
 		  break;
 	    case BOOLEAN_TYPE:
-		  fprintf(fp, "%s", expr_result->data.boolean_value?"true":"false");
+		  fprintf(fp, "boolean: %s\n", expr_result->data.boolean_value == TRUE ? "true" : "false");
 		  break;
 	    default:
 		  fprintf(fp, "unknown type\n");   

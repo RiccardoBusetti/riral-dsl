@@ -79,34 +79,31 @@ REAL_VAL {DIGIT}+\.({DIGIT}+)?
           }
 
 {REAL_VAL} {
-            yylval.real_value = atof(yytext);
-            return REAL_VAL;
+             yylval.real_value = atof(yytext);
+             return REAL_VAL;
            }
            
 {BOOLEAN_VAL} {
-		   printf("hi");
-		   char *bool = strdup(yytext);
-		   int value=strcmp(bool,"true");  
-		   if(value==0) {
-		   	yylval.boolean_value = 0;
-		   	return BOOLEAN_VAL;
-		   }
-		   else {
-		   	yylval.boolean_value = 1;
-		   	return BOOLEAN_VAL;
-		   }
-		}
+			    char *bool = strdup(yytext);
+			    if(strcmp(bool, "true") == 0) {
+			          yylval.boolean_value = 1;
+			    } else {
+				     yylval.boolean_value = 0;
+		        }
+
+		        return BOOLEAN_VAL;
+		      }
 		   	
 {STRING_VAL} { 
-                  char *string = yytext;
-                  string++[strlen(yytext) - 1] = 0;
-		              yylval.string_value = strdup(string);
-		              return STRING_VAL;
-		             }
+			   char *string = yytext;
+               string++[strlen(yytext) - 1] = 0;
+		       yylval.string_value = strdup(string);
+		       return STRING_VAL;
+		     }
 
 {ID} {
-      yylval.lexeme = strdup(yytext);
-      return ID;
+       yylval.lexeme = strdup(yytext);
+       return ID;
      }
 
 . { printf("The symbol %s is unknown.\n", yytext); exit(0); }
