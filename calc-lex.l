@@ -38,17 +38,19 @@ STRING_CONTENT \"[a-zA-Z0-9.\-\!\#\$\%\&\'\*\+\/\{\}\[\]\(\)\?\<\>\^ ]+\"
 
 "log" { return LOG; }
 
-"log10" { return LOG10;}
+"log10" { return LOG10; }
 
-"sqrt" { return SQRT;}
+"sqrt" { return SQRT; }
 
-"sin" { return SIN;}
+"sin" { return SIN; }
 
-"cos" { return COS;}
+"cos" { return COS; }
 
-"tan" { return TAN;}
+"tan" { return TAN; }
 
 "|" { return '|'; }
+
+"." { return '.'; }
 
 "," { return ','; }
 

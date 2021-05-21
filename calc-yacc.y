@@ -25,7 +25,8 @@ typedef enum {
       SIN_OP,
       COS_OP,
       TAN_OP,
-      CON_OP
+      CON_OP,
+      CON_SPACE_OP
 } Operation;
 
 
@@ -129,13 +130,14 @@ StatementResult *build_void_statement_result();
 /* EXPRESSION FUNCTIONS */
 ExprResult *build_expr_result(Type type, TypeData data);
 ExprResult *operation(ExprResult *left, ExprResult *right, Operation operation);
-ExprResult *sum(ExprResult *left, ExprResult *right);
-ExprResult *dif(ExprResult *left, ExprResult *right);
-ExprResult *mol(ExprResult *left, ExprResult *right);
+ExprResult *sum_op(ExprResult *left, ExprResult *right);
+ExprResult *dif_op(ExprResult *left, ExprResult *right);
+ExprResult *mol_op(ExprResult *left, ExprResult *right);
 ExprResult *div_op(ExprResult *left, ExprResult *right);
 ExprResult *exp_op(ExprResult *left, ExprResult *right);
 ExprResult *log_op(ExprResult *left, ExprResult *right);
 ExprResult *con_op(ExprResult *left, ExprResult *right);
+ExprResult *con_space_op(ExprResult *left, ExprResult *right);
 ExprResult *single_operation(ExprResult *left, Operation operation);
 ExprResult *neg_op(ExprResult *left);
 ExprResult *fac_op(ExprResult *left);
@@ -178,7 +180,7 @@ Program *MAIN = NULL;
 %left '*' '/'
 %left '^' '!'
 %left LOG LN LOG10 SQRT SIN COS TAN
-%left '|'
+%left '.' '|'  
 %right UMINUS
 
 %start scope
@@ -223,7 +225,8 @@ expr : '(' expr ')' { $$ = $2; }
      | SIN '(' expr ')' { $$ = single_operation($3, SIN_OP); }
      | COS '(' expr ')' { $$ = single_operation($3, COS_OP); }
      | TAN '(' expr ')' { $$ = single_operation($3, TAN_OP); }
-     | expr '|' expr { $$ = operation($1, $3, CON_OP); }
+     | expr '.' expr { $$ = operation($1, $3, CON_OP); }
+     | expr '|' expr { $$ = operation($1, $3, CON_SPACE_OP); }
      | INT_NUM { TypeData data; data.int_value = $1; $$ = build_expr_result(INT_TYPE, data); }
      | REAL_NUM { TypeData data; data.real_value = $1; $$ = build_expr_result(REAL_TYPE, data); }
      | STRING_CONTENT { TypeData data; data.string_value = $1; $$ = build_expr_result(STRING_TYPE, data); }
@@ -525,11 +528,11 @@ ExprResult *operation(ExprResult *left, ExprResult *right, Operation operation) 
 
       switch (operation) {
             case SUM_OP: 
-                  return sum(left, right);
+                  return sum_op(left, right);
             case DIF_OP: 
-                  return dif(left, right);
+                  return dif_op(left, right);
             case MOL_OP: 
-                  return mol(left, right);
+                  return mol_op(left, right);
             case DIV_OP: 
                   return div_op(left, right);
             case EXP_OP: 
@@ -538,6 +541,8 @@ ExprResult *operation(ExprResult *left, ExprResult *right, Operation operation) 
                   return log_op(left, right);
             case CON_OP: 
                   return con_op(left, right);
+            case CON_SPACE_OP: 
+                  return con_space_op(left, right);
             default:
                   return left;
       }
@@ -568,70 +573,70 @@ ExprResult *single_operation(ExprResult *left, Operation operation) {
       }
 }
 
-ExprResult *sum(ExprResult *left, ExprResult *right) {
-      ExprResult *sum = malloc(sizeof(ExprResult));
+ExprResult *sum_op(ExprResult *left, ExprResult *right) {
+      ExprResult *sum_op = malloc(sizeof(ExprResult));
 
       if (left->type == INT_TYPE && right->type == INT_TYPE) {
-            sum->type = INT_TYPE;
-            sum->data.int_value = left->data.int_value + right->data.int_value;
+            sum_op->type = INT_TYPE;
+            sum_op->data.int_value = left->data.int_value + right->data.int_value;
       } else if (left->type == INT_TYPE && right->type == REAL_TYPE) {
-            sum->type = REAL_TYPE;
-            sum->data.real_value = left->data.int_value + right->data.real_value;
+            sum_op->type = REAL_TYPE;
+            sum_op->data.real_value = left->data.int_value + right->data.real_value;
       } else if (left->type == REAL_TYPE && right->type == INT_TYPE) {
-            sum->type = REAL_TYPE;
-            sum->data.real_value = left->data.real_value + right->data.int_value;
+            sum_op->type = REAL_TYPE;
+            sum_op->data.real_value = left->data.real_value + right->data.int_value;
       } else if (left->type == REAL_TYPE && right->type == REAL_TYPE) {
-            sum->type = REAL_TYPE;
-            sum->data.real_value = left->data.real_value + right->data.real_value;
+            sum_op->type = REAL_TYPE;
+            sum_op->data.real_value = left->data.real_value + right->data.real_value;
       } else {
             yyerror("invalid type/s for expression +");
       }
 
-      return sum;
+      return sum_op;
 }
 
-ExprResult *dif(ExprResult *left, ExprResult *right) {
-      ExprResult *dif = malloc(sizeof(ExprResult));
+ExprResult *dif_op(ExprResult *left, ExprResult *right) {
+      ExprResult *dif_op = malloc(sizeof(ExprResult));
 
       if (left->type == INT_TYPE && right->type == INT_TYPE) {
-            dif->type = INT_TYPE;
-            dif->data.int_value = left->data.int_value - right->data.int_value;
+            dif_op->type = INT_TYPE;
+            dif_op->data.int_value = left->data.int_value - right->data.int_value;
       } else if (left->type == INT_TYPE && right->type == REAL_TYPE) {
-            dif->type = REAL_TYPE;
-            dif->data.real_value = left->data.int_value - right->data.real_value;
+            dif_op->type = REAL_TYPE;
+            dif_op->data.real_value = left->data.int_value - right->data.real_value;
       } else if (left->type == REAL_TYPE && right->type == INT_TYPE) {
-            dif->type = REAL_TYPE;
-            dif->data.real_value = left->data.real_value - right->data.int_value;
+            dif_op->type = REAL_TYPE;
+            dif_op->data.real_value = left->data.real_value - right->data.int_value;
       } else if (left->type == REAL_TYPE && right->type == REAL_TYPE) {
-            dif->type = REAL_TYPE;
-            dif->data.real_value = left->data.real_value - right->data.real_value;
+            dif_op->type = REAL_TYPE;
+            dif_op->data.real_value = left->data.real_value - right->data.real_value;
       } else {
             yyerror("invalid type/s for expression -");
       }
 
-      return dif;
+      return dif_op;
 }
 
-ExprResult *mol(ExprResult *left, ExprResult *right) {
-      ExprResult *mol = malloc(sizeof(ExprResult));
+ExprResult *mol_op(ExprResult *left, ExprResult *right) {
+      ExprResult *mol_op = malloc(sizeof(ExprResult));
 
       if (left->type == INT_TYPE && right->type == INT_TYPE) {
-            mol->type = INT_TYPE;
-            mol->data.int_value = left->data.int_value * right->data.int_value;
+            mol_op->type = INT_TYPE;
+            mol_op->data.int_value = left->data.int_value * right->data.int_value;
       } else if (left->type == INT_TYPE && right->type == REAL_TYPE) {
-            mol->type = REAL_TYPE;
-            mol->data.real_value = left->data.int_value * right->data.real_value;
+            mol_op->type = REAL_TYPE;
+            mol_op->data.real_value = left->data.int_value * right->data.real_value;
       } else if (left->type == REAL_TYPE && right->type == INT_TYPE) {
-            mol->type = REAL_TYPE;
-            mol->data.real_value = left->data.real_value * right->data.int_value;
+            mol_op->type = REAL_TYPE;
+            mol_op->data.real_value = left->data.real_value * right->data.int_value;
       } else if (left->type == REAL_TYPE && right->type == REAL_TYPE) {
-            mol->type = REAL_TYPE;
-            mol->data.real_value = left->data.real_value * right->data.real_value;
+            mol_op->type = REAL_TYPE;
+            mol_op->data.real_value = left->data.real_value * right->data.real_value;
       } else {
             yyerror("invalid type/s for expression *");
       }
 
-      return mol;
+      return mol_op;
 }
 
 ExprResult *div_op(ExprResult *left, ExprResult *right) {
@@ -701,7 +706,25 @@ ExprResult *log_op(ExprResult *left, ExprResult *right) {
 }
 
 ExprResult *con_op(ExprResult *left, ExprResult *right) {
+      ExprResult *con_op = malloc(sizeof(ExprResult));
 
+      if (left->type == STRING_TYPE && right->type == STRING_TYPE) {
+            con_op->type = STRING_TYPE;
+            char *new_str;
+            new_str = malloc(strlen(left->data.string_value) + strlen(right->data.string_value));
+            new_str[0] = '\0';
+            strcat(new_str, left->data.string_value);
+      
+            strcat(new_str, right->data.string_value);
+            con_op->data.string_value = new_str;
+      } else {
+            yyerror("invalid type/s for expression .");
+      } 
+
+      return con_op;
+}
+
+ExprResult *con_space_op(ExprResult *left, ExprResult *right) {
       ExprResult *con_op = malloc(sizeof(ExprResult));
 
       if (left->type == STRING_TYPE && right->type == STRING_TYPE) {
