@@ -8,7 +8,7 @@ DIGIT [0-9]
 INT_NUM {DIGIT}+
 REAL_NUM {DIGIT}+\.({DIGIT}+)?
 ID [a-zA-Z]+
-STRING_CONTENT \"[a-zA-Z0-9.]+\"
+STRING_CONTENT \"[a-zA-Z0-9.\-\!\#\$\%\&\'\*\+\/\{\}\[\]\(\)\?\<\>\^ ]+\"
 
 %%
 
@@ -47,6 +47,8 @@ STRING_CONTENT \"[a-zA-Z0-9.]+\"
 "cos" { return COS;}
 
 "tan" { return TAN;}
+
+"|" { return '|'; }
 
 "," { return ','; }
 

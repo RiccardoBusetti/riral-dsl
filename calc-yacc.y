@@ -24,7 +24,8 @@ typedef enum {
       SQRT_OP,
       SIN_OP,
       COS_OP,
-      TAN_OP
+      TAN_OP,
+      CON_OP
 } Operation;
 
 
@@ -134,6 +135,7 @@ ExprResult *mol(ExprResult *left, ExprResult *right);
 ExprResult *div_op(ExprResult *left, ExprResult *right);
 ExprResult *exp_op(ExprResult *left, ExprResult *right);
 ExprResult *log_op(ExprResult *left, ExprResult *right);
+ExprResult *con_op(ExprResult *left, ExprResult *right);
 ExprResult *single_operation(ExprResult *left, Operation operation);
 ExprResult *neg_op(ExprResult *left);
 ExprResult *fac_op(ExprResult *left);
@@ -176,6 +178,7 @@ Program *MAIN = NULL;
 %left '*' '/'
 %left '^' '!'
 %left LOG LN LOG10 SQRT SIN COS TAN
+%left '|'
 %right UMINUS
 
 %start scope
@@ -220,6 +223,7 @@ expr : '(' expr ')' { $$ = $2; }
      | SIN '(' expr ')' { $$ = single_operation($3, SIN_OP); }
      | COS '(' expr ')' { $$ = single_operation($3, COS_OP); }
      | TAN '(' expr ')' { $$ = single_operation($3, TAN_OP); }
+     | expr '|' expr { $$ = operation($1, $3, CON_OP); }
      | INT_NUM { TypeData data; data.int_value = $1; $$ = build_expr_result(INT_TYPE, data); }
      | REAL_NUM { TypeData data; data.real_value = $1; $$ = build_expr_result(REAL_TYPE, data); }
      | STRING_CONTENT { TypeData data; data.string_value = $1; $$ = build_expr_result(STRING_TYPE, data); }
@@ -532,6 +536,8 @@ ExprResult *operation(ExprResult *left, ExprResult *right, Operation operation) 
                   return exp_op(left, right);
             case LOG_OP: 
                   return log_op(left, right);
+            case CON_OP: 
+                  return con_op(left, right);
             default:
                   return left;
       }
@@ -692,6 +698,26 @@ ExprResult *log_op(ExprResult *left, ExprResult *right) {
       }
 
       return log_op;
+}
+
+ExprResult *con_op(ExprResult *left, ExprResult *right) {
+
+      ExprResult *con_op = malloc(sizeof(ExprResult));
+
+      if (left->type == STRING_TYPE && right->type == STRING_TYPE) {
+            con_op->type = STRING_TYPE;
+            char *new_str;
+            new_str = malloc(strlen(left->data.string_value) + 1 + strlen(right->data.string_value));
+            new_str[0] = '\0';
+            strcat(new_str, left->data.string_value);
+            strcat(new_str, " ");
+            strcat(new_str, right->data.string_value);
+            con_op->data.string_value = new_str;
+      } else {
+            yyerror("invalid type/s for expression |");
+      } 
+
+      return con_op;
 }
 
 ExprResult *neg_op(ExprResult *left) {
