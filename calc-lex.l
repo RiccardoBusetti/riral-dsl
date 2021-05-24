@@ -61,6 +61,18 @@ REAL_VAL {DIGIT}+\.({DIGIT}+)?
 
 "=" { return '='; }
 
+">" { return '>'; }
+
+"<" { return '<'; }
+
+">=" { return GE; }
+
+"<=" { return LE; }
+
+"==" { return EQUAL; }
+
+"!=" { return NE; }
+
 "\"" { return '"'; }
 
 "int" { return INT; }
