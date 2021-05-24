@@ -6,10 +6,12 @@
 
 DIGIT [0-9]
 ID [a-zA-Z]+
+TEXT [a-zA-Z0-9.\-\!\#\$\%\&\'\*\+\/\{\}\[\]\(\)\?\<\>\^ ]
 BOOLEAN_VAL true|false
-STRING_VAL \"[a-zA-Z0-9.]+\"
+STRING_VAL \"{TEXT}+\"
 INT_VAL {DIGIT}+
 REAL_VAL {DIGIT}+\.({DIGIT}+)?
+COMMENT	\/\*({TEXT}|\t|\n)*\*\/
 
 %%
 
@@ -90,7 +92,7 @@ REAL_VAL {DIGIT}+\.({DIGIT}+)?
 {BOOLEAN_VAL} {
 			    char *bool = strdup(yytext);
 			    if(strcmp(bool, "true") == 0) {
-			          yylval.boolean_value = 1;
+			         yylval.boolean_value = 1;
 			    } else {
 				     yylval.boolean_value = 0;
 		        }
@@ -98,7 +100,7 @@ REAL_VAL {DIGIT}+\.({DIGIT}+)?
 		        return BOOLEAN_VAL;
 		      }
 		   	
-{STRING_VAL} { 
+{STRING_VAL} {
 			   char *string = yytext;
                string++[strlen(yytext) - 1] = 0;
 		       yylval.string_value = strdup(string);
@@ -109,6 +111,8 @@ REAL_VAL {DIGIT}+\.({DIGIT}+)?
        yylval.lexeme = strdup(yytext);
        return ID;
      }
+
+{COMMENT} { /* skip comments */ }
 
 . { printf("The symbol %s is unknown.\n", yytext); exit(0); }
 
