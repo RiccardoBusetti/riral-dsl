@@ -63,6 +63,18 @@ COMMENT	\/\*({TEXT}|\t|\n)*\*\/
 
 "=" { return '='; }
 
+">" { return '>'; }
+
+"<" { return '<'; }
+
+">=" { return GE; }
+
+"<=" { return LE; }
+
+"==" { return EQUAL; }
+
+"!=" { return NE; }
+
 "\"" { return '"'; }
 
 "int" { return INT; }
