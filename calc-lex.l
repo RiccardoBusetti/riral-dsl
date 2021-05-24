@@ -91,6 +91,14 @@ COMMENT	\/\*({TEXT}|\t|\n)*\*\/
 
 "return" { return RETURN; }
 
+"if" { return IF; }
+
+"else" { return ELSE; }
+
+"elif" { return ELIF; }
+
+"while" { return WHILE; }
+
 {INT_VAL} {
             yylval.int_value = atoi(yytext);
             return INT_VAL;

@@ -192,7 +192,7 @@ Program *MAIN = NULL;
 %token <boolean_value> BOOLEAN_VAL
 %token <string_value> STRING_VAL
 %token <lexeme> ID
-%token PRINT BLOCK RETURN
+%token PRINT BLOCK RETURN IF ELSE ELIF WHILE
 %token INT REAL BOOLEAN STRING LN LOG LOG10 SQRT GT LT GE LE EQ NE 
 
 %type <type> type
@@ -224,7 +224,14 @@ statement : expr { $$ = build_statement_result_from($1); }
           | ID '=' statement { existing_assignment($1, $3); $$ = build_void_statement_result(); }
           | PRINT '(' expr ')' { print_expr_result($3); $$ = build_void_statement_result(); }
           | BLOCK '{' { new_scope(); } stmt_block { destroy_scope(); } '}' { $$ = $4; }
+          | IF '(' expr ')' '{' statements '}' else { $$ = build_void_statement_result(); }
+          | WHILE '(' expr ')' '{' statements '}' { $$ = build_void_statement_result(); }
           ;
+
+else : ELIF '(' expr ')' '{' statements '}' else
+     | ELSE '{' statements '}'
+     | /* epsilon */
+     ;
 
 stmt_block : statements { $$ = build_void_statement_result(); }
            | statements RETURN expr ';' { $$ = build_statement_result_from($3); }
