@@ -63,15 +63,15 @@ COMMENT	\/\*({TEXT}|\t|\n)*\*\/
 
 "=" { return '='; }
 
-">" { return '>'; }
+">" { return GT; }
 
-"<" { return '<'; }
+"<" { return LT; }
 
 ">=" { return GE; }
 
 "<=" { return LE; }
 
-"==" { return EQUAL; }
+"==" { return EQ; }
 
 "!=" { return NE; }
 

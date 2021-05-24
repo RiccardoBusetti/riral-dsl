@@ -35,10 +35,10 @@ typedef enum {
       TAN_OP,
       CON_OP,
       CON_SPACE_OP,
-      EQUAL_OP,
+      EQ_OP,
       NE_OP,
-      GREAT_OP,
-      LESS_OP,
+      GT_OP,
+      LT_OP,
       GE_OP,
       LE_OP
 } Operation;
@@ -154,10 +154,10 @@ ExprResult *exp_op(ExprResult *left, ExprResult *right);
 ExprResult *log_op(ExprResult *left, ExprResult *right);
 ExprResult *con_op(ExprResult *left, ExprResult *right);
 ExprResult *con_space_op(ExprResult *left, ExprResult *right);
-ExprResult *equal_op(ExprResult *left, ExprResult *right);
+ExprResult *eq_op(ExprResult *left, ExprResult *right);
 ExprResult *ne_op(ExprResult *left, ExprResult *right);
-ExprResult *great_op(ExprResult *left, ExprResult *right);
-ExprResult *less_op(ExprResult *left, ExprResult *right);
+ExprResult *gt_op(ExprResult *left, ExprResult *right);
+ExprResult *lt_op(ExprResult *left, ExprResult *right);
 ExprResult *ge_op(ExprResult *left, ExprResult *right);
 ExprResult *le_op(ExprResult *left, ExprResult *right);
 ExprResult *single_operation(ExprResult *left, Operation operation);
@@ -193,7 +193,7 @@ Program *MAIN = NULL;
 %token <string_value> STRING_VAL
 %token <lexeme> ID
 %token PRINT BLOCK RETURN
-%token INT REAL BOOLEAN STRING LN LOG LOG10 SQRT EQUAL NOT_EQUAL GE LE
+%token INT REAL BOOLEAN STRING LN LOG LOG10 SQRT GT LT GE LE EQ NE 
 
 %type <type> type
 %type <statement_result> statement
@@ -205,7 +205,7 @@ Program *MAIN = NULL;
 %left '^' '!'
 %left LOG LN LOG10 SQRT SIN COS TAN
 %left '.' '|'  
-%left '>' '<' EQUAL NE GE LE
+%left GT LT GE LE EQ NE 
 %right UMINUS
 
 %start program
@@ -253,12 +253,12 @@ expr : '(' expr ')' { $$ = $2; }
      | SIN '(' expr ')' { $$ = single_operation($3, SIN_OP); }
      | COS '(' expr ')' { $$ = single_operation($3, COS_OP); }
      | TAN '(' expr ')' { $$ = single_operation($3, TAN_OP); }
-     | expr EQUAL expr  { $$ = operation($1, $3, EQUAL_OP); }
-     | expr NE expr  { $$ = operation($1, $3, NE_OP); }
-     | expr '>' expr  { $$ = operation($1, $3, GREAT_OP); }
-     | expr '<' expr  { $$ = operation($1, $3, LESS_OP); }
+     | expr GT expr  { $$ = operation($1, $3, GT_OP); }
+     | expr LT expr  { $$ = operation($1, $3, LT_OP); }
      | expr GE expr  { $$ = operation($1, $3, GE_OP); }
      | expr LE expr  { $$ = operation($1, $3, LE_OP); }
+     | expr EQ expr  { $$ = operation($1, $3, EQ_OP); }
+     | expr NE expr  { $$ = operation($1, $3, NE_OP); }
      | INT_VAL { TypeData data; data.int_value = $1; $$ = build_expr_result(INT_TYPE, data); }
      | REAL_VAL { TypeData data; data.real_value = $1; $$ = build_expr_result(REAL_TYPE, data); }
      | BOOLEAN_VAL { TypeData data; data.boolean_value = $1 == 0 ? FALSE : TRUE; $$ = build_expr_result(BOOLEAN_TYPE, data); }
@@ -577,14 +577,14 @@ ExprResult *operation(ExprResult *left, ExprResult *right, Operation operation) 
                   return con_op(left, right);
             case CON_SPACE_OP: 
                   return con_space_op(left, right);
-            case EQUAL_OP: 
-                  return equal_op(left, right);   
+            case EQ_OP: 
+                  return eq_op(left, right);   
             case NE_OP: 
                   return ne_op(left, right); 
-            case GREAT_OP: 
-                  return great_op(left, right);  
-            case LESS_OP: 
-                  return less_op(left, right);   
+            case GT_OP: 
+                  return gt_op(left, right);  
+            case LT_OP: 
+                  return lt_op(left, right);   
             case GE_OP: 
                   return ge_op(left, right);   
             case LE_OP: 
@@ -751,26 +751,26 @@ ExprResult *log_op(ExprResult *left, ExprResult *right) {
       return log_op;
 }
 
-ExprResult *equal_op(ExprResult *left, ExprResult *right) {
-      ExprResult *equal_op = malloc(sizeof(ExprResult));
+ExprResult *eq_op(ExprResult *left, ExprResult *right) {
+      ExprResult *eq_op = malloc(sizeof(ExprResult));
 
       if (left->type == INT_TYPE && right->type == INT_TYPE) {
-            equal_op->type = BOOLEAN_TYPE;
-            equal_op->data.boolean_value = left->data.int_value == right->data.int_value;
+            eq_op->type = BOOLEAN_TYPE;
+            eq_op->data.boolean_value = left->data.int_value == right->data.int_value;
       } else if (left->type == INT_TYPE && right->type == REAL_TYPE) {
-            equal_op->type = BOOLEAN_TYPE;
-            equal_op->data.boolean_value = fabs(left->data.int_value - right->data.real_value) < EPSILON;
+            eq_op->type = BOOLEAN_TYPE;
+            eq_op->data.boolean_value = fabs(left->data.int_value - right->data.real_value) < EPSILON;
       } else if (left->type == REAL_TYPE && right->type == INT_TYPE) {
-            equal_op->type = BOOLEAN_TYPE;
-            equal_op->data.boolean_value = fabs(left->data.real_value - right->data.int_value) < EPSILON;
+            eq_op->type = BOOLEAN_TYPE;
+            eq_op->data.boolean_value = fabs(left->data.real_value - right->data.int_value) < EPSILON;
       } else if (left->type == REAL_TYPE && right->type == REAL_TYPE) {
-            equal_op->type = BOOLEAN_TYPE;
-            equal_op->data.boolean_value = fabs(left->data.real_value - right->data.real_value) < EPSILON;
+            eq_op->type = BOOLEAN_TYPE;
+            eq_op->data.boolean_value = fabs(left->data.real_value - right->data.real_value) < EPSILON;
       } else {
             yyerror("invalid type/s for expression ==");
       }
 
-      return equal_op;
+      return eq_op;
 }
 
 ExprResult *ne_op(ExprResult *left, ExprResult *right) {
@@ -795,48 +795,48 @@ ExprResult *ne_op(ExprResult *left, ExprResult *right) {
       return ne_op;
 }
 
-ExprResult *great_op(ExprResult *left, ExprResult *right) {
-      ExprResult *great_op = malloc(sizeof(ExprResult));
+ExprResult *gt_op(ExprResult *left, ExprResult *right) {
+      ExprResult *gt_op = malloc(sizeof(ExprResult));
 
       if (left->type == INT_TYPE && right->type == INT_TYPE) {
-            great_op->type = BOOLEAN_TYPE;
-            great_op->data.boolean_value = left->data.int_value > right->data.int_value;
+            gt_op->type = BOOLEAN_TYPE;
+            gt_op->data.boolean_value = left->data.int_value > right->data.int_value;
       } else if (left->type == INT_TYPE && right->type == REAL_TYPE) {
-            great_op->type = BOOLEAN_TYPE;
-            great_op->data.boolean_value = left->data.int_value > right->data.real_value;
+            gt_op->type = BOOLEAN_TYPE;
+            gt_op->data.boolean_value = left->data.int_value > right->data.real_value;
       } else if (left->type == REAL_TYPE && right->type == INT_TYPE) {
-            great_op->type = BOOLEAN_TYPE;
-            great_op->data.boolean_value = left->data.real_value > right->data.int_value;
+            gt_op->type = BOOLEAN_TYPE;
+            gt_op->data.boolean_value = left->data.real_value > right->data.int_value;
       } else if (left->type == REAL_TYPE && right->type == REAL_TYPE) {
-            great_op->type = BOOLEAN_TYPE;
-            great_op->data.boolean_value = left->data.real_value > right->data.real_value;
+            gt_op->type = BOOLEAN_TYPE;
+            gt_op->data.boolean_value = left->data.real_value > right->data.real_value;
       } else {
             yyerror("invalid type/s for expression >");
       }
 
-      return great_op;
+      return gt_op;
 }
 
-ExprResult *less_op(ExprResult *left, ExprResult *right) {
-      ExprResult *less_op = malloc(sizeof(ExprResult));
+ExprResult *lt_op(ExprResult *left, ExprResult *right) {
+      ExprResult *lt_op = malloc(sizeof(ExprResult));
 
       if (left->type == INT_TYPE && right->type == INT_TYPE) {
-            less_op->type = BOOLEAN_TYPE;
-            less_op->data.boolean_value = left->data.int_value < right->data.int_value;
+            lt_op->type = BOOLEAN_TYPE;
+            lt_op->data.boolean_value = left->data.int_value < right->data.int_value;
       } else if (left->type == INT_TYPE && right->type == REAL_TYPE) {
-            less_op->type = BOOLEAN_TYPE;
-            less_op->data.boolean_value = left->data.int_value < right->data.real_value;
+            lt_op->type = BOOLEAN_TYPE;
+            lt_op->data.boolean_value = left->data.int_value < right->data.real_value;
       } else if (left->type == REAL_TYPE && right->type == INT_TYPE) {
-            less_op->type = BOOLEAN_TYPE;
-            less_op->data.boolean_value = left->data.real_value < right->data.int_value;
+            lt_op->type = BOOLEAN_TYPE;
+            lt_op->data.boolean_value = left->data.real_value < right->data.int_value;
       } else if (left->type == REAL_TYPE && right->type == REAL_TYPE) {
-            less_op->type = BOOLEAN_TYPE;
-            less_op->data.boolean_value = left->data.real_value < right->data.real_value;
+            lt_op->type = BOOLEAN_TYPE;
+            lt_op->data.boolean_value = left->data.real_value < right->data.real_value;
       } else {
             yyerror("invalid type/s for expression <");
       }
 
-      return less_op;
+      return lt_op;
 }
 
 ExprResult *ge_op(ExprResult *left, ExprResult *right) {
