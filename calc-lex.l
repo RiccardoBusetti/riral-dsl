@@ -5,10 +5,11 @@
 %}
 
 DIGIT [0-9]
-INT_NUM {DIGIT}+
-REAL_NUM {DIGIT}+\.({DIGIT}+)?
 ID [a-zA-Z]+
-STRING_CONTENT \"[a-zA-Z0-9.\-\!\#\$\%\&\'\*\+\/\{\}\[\]\(\)\?\<\>\^ ]+\"
+BOOLEAN_VAL true|false
+STRING_VAL \"[a-zA-Z0-9.]+\"
+INT_VAL {DIGIT}+
+REAL_VAL {DIGIT}+\.({DIGIT}+)?
 
 %%
 
@@ -68,32 +69,45 @@ STRING_CONTENT \"[a-zA-Z0-9.\-\!\#\$\%\&\'\*\+\/\{\}\[\]\(\)\?\<\>\^ ]+\"
 
 "string" { return STRING; }
 
+"boolean" { return BOOLEAN; }
+
 "print" { return PRINT; }
 
 "block" { return BLOCK; }
 
 "return" { return RETURN; }
 
-{INT_NUM} {
+{INT_VAL} {
             yylval.int_value = atoi(yytext);
-            return INT_NUM;
+            return INT_VAL;
           }
 
-{REAL_NUM} {
-            yylval.real_value = atof(yytext);
-            return REAL_NUM;
+{REAL_VAL} {
+             yylval.real_value = atof(yytext);
+             return REAL_VAL;
            }
-     
-{STRING_CONTENT} { 
-                  char *string = yytext;
-                  string++[strlen(yytext) - 1] = 0;
-		              yylval.string_value = strdup(string);
-		              return STRING_CONTENT;
-		             }
+           
+{BOOLEAN_VAL} {
+			    char *bool = strdup(yytext);
+			    if(strcmp(bool, "true") == 0) {
+			          yylval.boolean_value = 1;
+			    } else {
+				     yylval.boolean_value = 0;
+		        }
+
+		        return BOOLEAN_VAL;
+		      }
+		   	
+{STRING_VAL} { 
+			   char *string = yytext;
+               string++[strlen(yytext) - 1] = 0;
+		       yylval.string_value = strdup(string);
+		       return STRING_VAL;
+		     }
 
 {ID} {
-      yylval.lexeme = strdup(yytext);
-      return ID;
+       yylval.lexeme = strdup(yytext);
+       return ID;
      }
 
 . { printf("The symbol %s is unknown.\n", yytext); exit(0); }

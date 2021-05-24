@@ -9,6 +9,13 @@
 #define OUTPUT_FILE "output.txt"
 
 
+/* BASIC TYPES */
+typedef enum {
+      FALSE,
+      TRUE
+} Boolean;
+
+
 /* OPERATORS */
 typedef enum {
       SUM_OP,
@@ -35,13 +42,15 @@ typedef enum {
       VOID_TYPE,
       INT_TYPE,
       REAL_TYPE,
-      STRING_TYPE
+      STRING_TYPE,
+      BOOLEAN_TYPE
 } Type;
 
 typedef union {
       int int_value;
       double real_value;
       char *string_value;
+      Boolean boolean_value;
 } TypeData;
 
 
@@ -157,6 +166,7 @@ Program *MAIN = NULL;
 %union {
         int int_value;
         double real_value;
+        Boolean boolean_value;
         char *string_value;
         char *lexeme;
         Type type;
@@ -164,12 +174,13 @@ Program *MAIN = NULL;
         ExprResult *expr_result;
        }
 
-%token <int_value> INT_NUM
-%token <real_value> REAL_NUM
-%token <string_value> STRING_CONTENT
+%token <int_value> INT_VAL
+%token <real_value> REAL_VAL
+%token <boolean_value> BOOLEAN_VAL
+%token <string_value> STRING_VAL
 %token <lexeme> ID
 %token PRINT BLOCK RETURN
-%token INT REAL STRING LN LOG LOG10 SQRT 
+%token INT REAL BOOLEAN STRING LN LOG LOG10 SQRT
 
 %type <type> type
 %type <statement_result> statement
@@ -208,7 +219,8 @@ stmt_block : statements { $$ = build_void_statement_result(); }
 type : INT { $$ = INT_TYPE; }
      | REAL { $$ = REAL_TYPE; }
      | STRING { $$ = STRING_TYPE; }
-     ;           
+     | BOOLEAN { $$ = BOOLEAN_TYPE; }
+     ;
 
 expr : '(' expr ')' { $$ = $2; }
      | expr '+' expr { $$ = operation($1, $3, SUM_OP); }
@@ -218,6 +230,8 @@ expr : '(' expr ')' { $$ = $2; }
      | expr '^' expr { $$ = operation($1, $3, EXP_OP); }
      | expr '!' { $$ = single_operation($1, FAC_OP); }
      | '-' expr %prec UMINUS { $$ = single_operation($2,  NEG_OP); }
+     | expr '.' expr { $$ = operation($1, $3, CON_OP); }
+     | expr '|' expr { $$ = operation($1, $3, CON_SPACE_OP); }
      | LOG '(' expr ',' expr ')' { $$ = operation($3, $5, LOG_OP); }
      | LN '(' expr ')' { $$ = single_operation($3, LN_OP); }
      | LOG10 '(' expr ')' { $$ = single_operation($3, LOG10_OP); }
@@ -225,11 +239,10 @@ expr : '(' expr ')' { $$ = $2; }
      | SIN '(' expr ')' { $$ = single_operation($3, SIN_OP); }
      | COS '(' expr ')' { $$ = single_operation($3, COS_OP); }
      | TAN '(' expr ')' { $$ = single_operation($3, TAN_OP); }
-     | expr '.' expr { $$ = operation($1, $3, CON_OP); }
-     | expr '|' expr { $$ = operation($1, $3, CON_SPACE_OP); }
-     | INT_NUM { TypeData data; data.int_value = $1; $$ = build_expr_result(INT_TYPE, data); }
-     | REAL_NUM { TypeData data; data.real_value = $1; $$ = build_expr_result(REAL_TYPE, data); }
-     | STRING_CONTENT { TypeData data; data.string_value = $1; $$ = build_expr_result(STRING_TYPE, data); }
+     | INT_VAL { TypeData data; data.int_value = $1; $$ = build_expr_result(INT_TYPE, data); }
+     | REAL_VAL { TypeData data; data.real_value = $1; $$ = build_expr_result(REAL_TYPE, data); }
+     | BOOLEAN_VAL { TypeData data; data.boolean_value = $1 == 0 ? FALSE : TRUE; $$ = build_expr_result(BOOLEAN_TYPE, data); }
+     | STRING_VAL { TypeData data; data.string_value = $1; $$ = build_expr_result(STRING_TYPE, data); }
      | ID { SymbolTableEntry *entry = lookup($1); $$ = build_expr_result(entry->type, entry->data); }
      ;
 
@@ -257,6 +270,7 @@ char *type_to_string(Type type) {
             case INT_TYPE: return "int";
             case REAL_TYPE: return "real";
             case STRING_TYPE: return "string";
+            case BOOLEAN_TYPE: return "Boolean";
             default: return "unknown";
       }
 }
@@ -885,6 +899,9 @@ void print_expr_result(ExprResult *expr_result) {
 		  break;
 	    case STRING_TYPE:
 		  fprintf(fp, "string: %s\n", expr_result->data.string_value);
+		  break;
+	    case BOOLEAN_TYPE:
+		  fprintf(fp, "boolean: %s\n", expr_result->data.boolean_value == TRUE ? "true" : "false");
 		  break;
 	    default:
 		  fprintf(fp, "unknown type\n");   
