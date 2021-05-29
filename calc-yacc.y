@@ -336,7 +336,6 @@ void destroy_scope() {
                   current_node = next;
             }
 
-            free(symbol_table);
             program->current = current_scope->outer;
             free(current_scope);
       }
