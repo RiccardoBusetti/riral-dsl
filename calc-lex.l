@@ -6,7 +6,7 @@
 
 DIGIT [0-9]
 ID [a-zA-Z]+
-TEXT [a-zA-Z0-9.\-\!\#\$\%\&\'\*\+\/\{\}\[\]\(\)\?\<\>\^ ]
+TEXT [a-zA-Z0-9.\-\!\#\$\%\&\'\*\+\/\{\}\[\]\(\)\?\<\>\^\:\; ]
 BOOLEAN_VAL true|false
 STRING_VAL \"{TEXT}+\"
 INT_VAL {DIGIT}+

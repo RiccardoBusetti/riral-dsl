@@ -213,7 +213,7 @@ Program *MAIN = NULL;
 %%
 
 program : statements { exit(0); }
-      | /* epsilon */ { exit(0); }
+        | /* epsilon */ { exit(0); }
 
 statements : statement ';' statements
            | statement ';'
@@ -236,6 +236,7 @@ else : ELIF '(' expr ')' '{' statements '}' else
 stmt_block : statements { $$ = build_void_statement_result(); }
            | statements RETURN expr ';' { $$ = build_statement_result_from($3); }
            | RETURN expr ';' { $$ = build_statement_result_from($2); }
+           ;
 
 type : INT { $$ = INT_TYPE; }
      | REAL { $$ = REAL_TYPE; }
