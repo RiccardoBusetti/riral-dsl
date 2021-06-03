@@ -214,6 +214,7 @@ Program *MAIN = NULL;
 
 program : statements { exit(0); }
         | /* epsilon */ { exit(0); }
+        ;
 
 statements : statement ';' statements
            | statement ';'
