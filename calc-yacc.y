@@ -566,8 +566,6 @@ ExprResult *build_expr_result(Type type, TypeData data) {
 }
 
 ExprResult *operation(ExprResult *left, ExprResult *right, Operation operation) {
-      ExprResult *new_result;
-
       switch (operation) {
             case SUM_OP: 
                   return sum_op(left, right);
@@ -603,8 +601,6 @@ ExprResult *operation(ExprResult *left, ExprResult *right, Operation operation) 
 }
 
 ExprResult *single_operation(ExprResult *left, Operation operation) {
-      ExprResult *new_result;
-
       switch (operation) {
             case NEG_OP: 
                   return neg_op(left);
@@ -947,6 +943,7 @@ ExprResult *neg_op(ExprResult *left) {
 
 ExprResult *fac_op(ExprResult *left) {
       ExprResult *fac_op = malloc(sizeof(ExprResult));
+      
       if (left->type == INT_TYPE) {
             fac_op->type = INT_TYPE;
             int n = left->data.int_value;
