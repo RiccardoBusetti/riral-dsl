@@ -6,12 +6,13 @@
 
 DIGIT [0-9]
 ID [a-zA-Z]+
-TEXT [a-zA-Z0-9.\-\!\#\$\%\&\'\*\+\/\{\}\[\]\(\)\?\<\>\^\:\; ]
+TEXT [a-zA-Z0-9.\-\!\?\$\%\&\'\*\+\/\{\}\[\]\(\)\<\>\^\:\; ]
 BOOLEAN_VAL true|false
 STRING_VAL \"{TEXT}+\"
 INT_VAL {DIGIT}+
 REAL_VAL {DIGIT}+\.({DIGIT}+)?
-COMMENT	\/\*({TEXT}|\t|\n)*\*\/
+SINGLE_LINE_COMMENT	\#({TEXT}|\t)*\n
+MULTILINE_LINE_COMMENT \#\#({TEXT}|\t|\n)*\#\#
 
 %%
 
@@ -132,7 +133,7 @@ COMMENT	\/\*({TEXT}|\t|\n)*\*\/
        return ID;
      }
 
-{COMMENT} { /* skip comments */ }
+({SINGLE_LINE_COMMENT}|{MULTILINE_LINE_COMMENT}) { /* skip comments */ }
 
 . { printf("The symbol %s is unknown.\n", yytext); exit(0); }
 
