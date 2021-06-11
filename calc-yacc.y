@@ -692,7 +692,9 @@ ExprResult *mol_op(ExprResult *left, ExprResult *right) {
 ExprResult *div_op(ExprResult *left, ExprResult *right) {
       ExprResult *div_op = malloc(sizeof(ExprResult));
 
-      if (left->type == INT_TYPE && right->type == INT_TYPE) {
+      if ((right->type == INT_TYPE && right->data.int_value == 0) || (right->type == REAL_TYPE && right->data.real_value == 0)){
+            yyerror("can not divide by 0");
+      } else if (left->type == INT_TYPE && right->type == INT_TYPE) {
             div_op->type = INT_TYPE;
             div_op->data.int_value = left->data.int_value / right->data.int_value;
       } else if (left->type == INT_TYPE && right->type == REAL_TYPE) {
