@@ -716,7 +716,10 @@ ExprResult *div_op(ExprResult *left, ExprResult *right) {
 ExprResult *exp_op(ExprResult *left, ExprResult *right) {
       ExprResult *exp_op = malloc(sizeof(ExprResult));
 
-      if (left->type == INT_TYPE && right->type == INT_TYPE) {
+      if (((left->type == INT_TYPE && left->data.int_value == 0) || (left->type == REAL_TYPE && left->data.real_value == 0)) 
+            && ((right->type == INT_TYPE && right->data.int_value < 0) || (right->type == REAL_TYPE && right->data.real_value < 0))){
+            yyerror("result equal to infinity");
+      } else if (left->type == INT_TYPE && right->type == INT_TYPE) {
             exp_op->type = INT_TYPE;
             exp_op->data.int_value = pow(left->data.int_value, right->data.int_value);
       } else if (left->type == INT_TYPE && right->type == REAL_TYPE) {
