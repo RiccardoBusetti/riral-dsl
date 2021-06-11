@@ -693,7 +693,7 @@ ExprResult *div_op(ExprResult *left, ExprResult *right) {
       ExprResult *div_op = malloc(sizeof(ExprResult));
 
       if ((right->type == INT_TYPE && right->data.int_value == 0) || (right->type == REAL_TYPE && right->data.real_value == 0)){
-            yyerror("can not divide by 0");
+            yyerror("cannot divide by 0");
       } else if (left->type == INT_TYPE && right->type == INT_TYPE) {
             div_op->type = INT_TYPE;
             div_op->data.int_value = left->data.int_value / right->data.int_value;
@@ -741,7 +741,10 @@ ExprResult *exp_op(ExprResult *left, ExprResult *right) {
 ExprResult *log_op(ExprResult *left, ExprResult *right) {
       ExprResult *log_op = malloc(sizeof(ExprResult));
 
-      if (left->type == INT_TYPE && right->type == INT_TYPE) {
+      if (((left->type == INT_TYPE && left->data.int_value <= 0 ) || (left->type == REAL_TYPE && left->data.real_value <= 0 )) 
+            || ((right->type == INT_TYPE && (right->data.int_value <= 0 || right->data.int_value == 1)) || (right->type == REAL_TYPE && (right->data.real_value <= 0 || right->data.int_value == 1)))){
+            yyerror("invalid input for expression log");
+      } else if (left->type == INT_TYPE && right->type == INT_TYPE) {
             log_op->type = REAL_TYPE;
             log_op->data.real_value = log(left->data.int_value) / log(right->data.int_value);
       } else if (left->type == INT_TYPE && right->type == REAL_TYPE) {
@@ -968,7 +971,9 @@ ExprResult *fac_op(ExprResult *left) {
 ExprResult *ln_op(ExprResult *left) {
       ExprResult *ln_op = malloc(sizeof(ExprResult));
 
-      if (left->type == INT_TYPE) {
+      if ((left->type == INT_TYPE && left->data.int_value <= 0) || (left->type == REAL_TYPE && left->data.real_value <= 0)){
+            yyerror("cannot evaluate ln of negative numbers or 0");
+      } else if (left->type == INT_TYPE) {
             ln_op->type = REAL_TYPE;
             ln_op->data.real_value = log(left->data.int_value);
       } else if (left->type == REAL_TYPE) {
@@ -984,7 +989,9 @@ ExprResult *ln_op(ExprResult *left) {
 ExprResult *log10_op(ExprResult *left) {
       ExprResult *log10_op = malloc(sizeof(ExprResult));
 
-      if (left->type == INT_TYPE) {
+      if ((left->type == INT_TYPE && left->data.int_value <= 0) || (left->type == REAL_TYPE && left->data.real_value <= 0)){
+            yyerror("cannot evaluate log of negative numbers or 0");
+      } else if (left->type == INT_TYPE) {
             log10_op->type = REAL_TYPE;
             log10_op->data.real_value= log10(left->data.int_value);
       } else if (left->type == REAL_TYPE) {
@@ -1000,7 +1007,9 @@ ExprResult *log10_op(ExprResult *left) {
 ExprResult *sqrt_op(ExprResult *left) {
       ExprResult *sqrt_op = malloc(sizeof(ExprResult));
 
-      if (left->type == INT_TYPE) {
+      if ((left->type == INT_TYPE && left->data.int_value < 0) || (left->type == REAL_TYPE && left->data.real_value < 0)){
+            yyerror("cannot evaluate sqrt of negative numbers");
+      } else if (left->type == INT_TYPE) {
             sqrt_op->type = REAL_TYPE;
             sqrt_op->data.real_value= sqrt(left->data.int_value);
       } else if (left->type == REAL_TYPE) {
@@ -1048,7 +1057,9 @@ ExprResult *cos_op(ExprResult *left) {
 ExprResult *tan_op(ExprResult *left) {
       ExprResult *tan_op = malloc(sizeof(ExprResult));
 
-      if (left->type == INT_TYPE) {
+      if (left->type == REAL_TYPE && fabs((int)(left->data.real_value / (acos(-1.0) / 2))-(left->data.real_value / (acos(-1.0) / 2) ))< EPSILON){
+            yyerror("result equal to infinity");
+      } else if (left->type == INT_TYPE) {
             tan_op->type = REAL_TYPE;
             tan_op->data.real_value= tan(left->data.int_value);
       } else if (left->type == REAL_TYPE) {
