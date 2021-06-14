@@ -299,7 +299,7 @@ char *type_to_string(Type type) {
             case INT_TYPE: return "int";
             case REAL_TYPE: return "real";
             case STRING_TYPE: return "string";
-            case BOOLEAN_TYPE: return "Boolean";
+            case BOOLEAN_TYPE: return "boolean";
             default: return "unknown";
       }
 }
