@@ -200,12 +200,12 @@ Program *MAIN = NULL;
 %type <statement_result> stmt_block
 %type <expr_result> expr
 
+%left GT LT GE LE EQ NE 
 %left '-' '+'
 %left '*' '/'
 %left '^' '!'
 %left LOG LN LOG10 SQRT SIN COS TAN
 %left '.' '|'  
-%left GT LT GE LE EQ NE 
 %right UMINUS
 
 %start program
@@ -333,12 +333,12 @@ void destroy_scope() {
             while (current_node != NULL) {
                   SymbolTableNode *next = current_node->next;
                   free(current_node->entry);
-                  free(current_node);
+                  //free(current_node);
                   current_node = next;
             }
 
             program->current = current_scope->outer;
-            free(current_scope);
+            //free(current_scope);
       }
 }
 
